@@ -6,112 +6,175 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>🏍️ Chrono Motocross</title>
 <style>
-:root {
-  --orange: #ff6600;
-  --green: #22c55e;
-  --blue: #3b82f6;
-  --red: #ef4444;
-  --bg: #0a0a0a;
-  --card: #161616;
-  --border: #2a2a2a;
-  --text: #f0f0f0;
-  --muted: #666;
-}
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-html, body { height: 100%; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); overscroll-behavior: none; }
+:root{--orange:#ff6600;--green:#22c55e;--blue:#3b82f6;--red:#ef4444;--yellow:#f5c518;--bg:#0a0a0a;--card:#161616;--border:#2a2a2a;--text:#f0f0f0;--muted:#666;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);overscroll-behavior:none;}
 
-/* SETUP */
-#setup { padding: 16px; max-width: 600px; margin: 0 auto; }
-#setup h1 { text-align: center; font-size: 1.5rem; color: var(--orange); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 20px; text-shadow: 0 0 16px #ff660066; }
-.setup-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
-.setup-card h2 { font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
-.p-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
-.p-row:last-child { border-bottom: none; }
-.p-num { font-weight: 800; color: var(--orange); width: 24px; font-size: 1rem; flex-shrink: 0; }
-.p-row input[type="text"] { flex: 1; background: #0d0d0d; border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 10px 12px; font-size: 1rem; min-width: 0; }
-.p-row input[type="text"]:focus { outline: none; border-color: var(--orange); }
-.p-row input[type="color"] { width: 42px; height: 42px; border: 2px solid var(--border); border-radius: 8px; cursor: pointer; background: none; padding: 2px; flex-shrink: 0; }
-.options-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
-.opt-group { display: flex; flex-direction: column; gap: 4px; }
-.opt-group label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
-.opt-group select, .opt-group input[type="number"] { background: #0d0d0d; border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 10px 12px; font-size: 0.95rem; }
-#btn-launch { width: 100%; padding: 16px; background: var(--orange); color: #fff; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; cursor: pointer; margin-top: 4px; transition: background 0.15s, transform 0.1s; }
-#btn-launch:active { background: #cc5200; transform: scale(0.97); }
+/* ── SCREENS ── */
+.screen{display:none;padding:16px;max-width:520px;margin:0 auto;}
+.screen.active{display:block;}
 
-/* RACE */
-#race { display: none; }
-#auto-bar { background: var(--card); border-bottom: 1px solid var(--border); padding: 10px 14px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; position: sticky; top: 0; z-index: 10; }
-#auto-label { font-size: 0.75rem; color: var(--muted); }
-#auto-count { font-size: 1.6rem; font-weight: 900; color: var(--orange); min-width: 60px; font-variant-numeric: tabular-nums; }
-.auto-btn { background: #222; color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; font-size: 0.8rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
-.auto-btn:active { background: #333; }
-.auto-btn.paused { background: var(--orange); border-color: var(--orange); }
+h1{text-align:center;font-size:1.6rem;color:var(--orange);letter-spacing:3px;text-transform:uppercase;margin-bottom:24px;text-shadow:0 0 16px #ff660066;}
+h2{font-size:0.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;}
 
-/* TABS */
-#sprint-tabs { display: flex; border-bottom: 2px solid var(--border); overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-#sprint-tabs::-webkit-scrollbar { display: none; }
-.s-tab { flex: 1; min-width: 80px; padding: 12px 8px; text-align: center; font-size: 0.85rem; font-weight: 700; color: var(--muted); background: var(--card); border: none; cursor: pointer; border-bottom: 3px solid transparent; white-space: nowrap; }
-.s-tab.active { color: var(--orange); border-bottom-color: var(--orange); }
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px;}
+.card h2{margin-bottom:12px;}
 
-/* CARDS */
-#cards { padding: 10px 10px 80px; }
-.p-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; margin-bottom: 10px; overflow: hidden; transition: border-color 0.2s; }
-.p-card.running { border-color: var(--green); }
-.p-card.dnf { border-color: var(--red); opacity: 0.6; }
-.card-top { display: flex; align-items: center; padding: 12px 14px; gap: 10px; }
-.card-num { font-size: 1.3rem; font-weight: 900; color: var(--muted); width: 28px; flex-shrink: 0; }
-.card-dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
-.card-name { flex: 1; font-size: 1rem; font-weight: 700; }
-.card-time { font-family: 'Courier New', monospace; font-size: 1.3rem; font-weight: 900; color: var(--muted); font-variant-numeric: tabular-nums; }
-.card-time.running { color: var(--green); }
-.card-time.done { color: #fff; }
-.card-time.dnf-t { color: var(--red); }
-.card-btns { display: grid; grid-template-columns: 1fr 1fr 1fr; border-top: 1px solid var(--border); }
-.c-btn.faute:not(:disabled) { color: #f5c518; }
-.c-btn.faute:active:not(:disabled) { background: #3a2e00; }
-.fault-badge { display: inline-flex; align-items: center; justify-content: center; background: #f5c518; color: #000; border-radius: 50%; width: 20px; height: 20px; font-size: 0.75rem; font-weight: 900; margin-left: 4px; flex-shrink: 0; }
-.fault-badge.zero { background: #333; color: #666; }
-.c-btn { padding: 16px 8px; border: none; background: transparent; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; color: var(--muted); display: flex; flex-direction: column; align-items: center; gap: 4px; touch-action: manipulation; user-select: none; }
-.c-btn:not(:last-child) { border-right: 1px solid var(--border); }
-.c-btn .icon { font-size: 1.4rem; }
-.c-btn:disabled { opacity: 0.2; cursor: not-allowed; }
-.c-btn.depart:not(:disabled) { color: var(--blue); }
-.c-btn.arrivee:not(:disabled) { color: var(--green); }
-.c-btn.tombe:not(:disabled) { color: var(--red); }
-.c-btn.depart:active:not(:disabled) { background: #1e3a5f; }
-.c-btn.arrivee:active:not(:disabled) { background: #14532d; }
-.c-btn.tombe:active:not(:disabled) { background: #450a0a; }
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;}
+.field label{font-size:0.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+.field input,.field select{background:#0d0d0d;border:1px solid var(--border);border-radius:8px;color:var(--text);padding:12px 14px;font-size:1rem;width:100%;}
+.field input:focus,.field select:focus{outline:none;border-color:var(--orange);}
 
-/* CLASSEMENT */
-#classement { margin: 0 10px 10px; background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
-#classement h2 { padding: 14px 16px 10px; font-size: 0.85rem; color: var(--orange); text-transform: uppercase; letter-spacing: 1px; }
-.rank-row { display: flex; align-items: center; padding: 10px 16px; gap: 10px; border-top: 1px solid var(--border); }
-.rank-pos { font-size: 1rem; font-weight: 900; width: 28px; flex-shrink: 0; }
-.rank-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-.rank-name { flex: 1; font-size: 0.9rem; font-weight: 600; }
-.rank-times { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
-.rank-t { font-family: 'Courier New', monospace; font-size: 0.72rem; color: var(--muted); background: #111; border-radius: 4px; padding: 2px 6px; }
-.rank-t.best { color: var(--green); font-weight: 700; }
-.rank-t.dnf-t { color: var(--red); }
+.btn{width:100%;padding:15px;border:none;border-radius:12px;font-size:1rem;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;cursor:pointer;transition:all .15s;margin-bottom:10px;}
+.btn:active{transform:scale(.97);}
+.btn-orange{background:var(--orange);color:#fff;}
+.btn-orange:active{background:#cc5200;}
+.btn-dark{background:#222;color:var(--text);border:1px solid var(--border);}
+.btn-dark:active{background:#333;}
+.btn-green{background:var(--green);color:#000;}
+.btn-green:active{background:#16a34a;}
 
-#btn-reset { display: block; width: calc(100% - 20px); margin: 0 10px 20px; background: #1a1a1a; color: var(--muted); border: 1px solid var(--border); border-radius: 12px; padding: 14px; font-size: 0.9rem; font-weight: 600; cursor: pointer; text-align: center; }
-#btn-reset:active { background: #222; }
+.divider{display:flex;align-items:center;gap:10px;margin:16px 0;color:var(--muted);font-size:.8rem;}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border);}
 
-#toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(20px); background: #1a1a1a; color: var(--text); border: 1px solid var(--border); padding: 10px 20px; border-radius: 30px; font-size: 0.9rem; font-weight: 600; opacity: 0; transition: opacity 0.2s, transform 0.2s; pointer-events: none; z-index: 999; white-space: nowrap; max-width: 90vw; overflow: hidden; text-overflow: ellipsis; }
-#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.p-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+.p-row:last-child{border-bottom:none;}
+.p-num{font-weight:800;color:var(--orange);width:24px;font-size:1rem;flex-shrink:0;}
+.p-row input[type="text"]{flex:1;background:#0d0d0d;border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px 12px;font-size:1rem;min-width:0;}
+.p-row input[type="text"]:focus{outline:none;border-color:var(--orange);}
+.p-row input[type="color"]{width:42px;height:42px;border:2px solid var(--border);border-radius:8px;cursor:pointer;background:none;padding:2px;flex-shrink:0;}
+
+.options-row{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;}
+.opt-group{display:flex;flex-direction:column;gap:4px;}
+.opt-group label{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+.opt-group select,.opt-group input[type="number"]{background:#0d0d0d;border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px 12px;font-size:.95rem;}
+
+/* ── SESSION CODE DISPLAY ── */
+.code-box{background:#0d0d0d;border:2px solid var(--orange);border-radius:14px;padding:20px;text-align:center;margin-bottom:16px;}
+.code-box .code{font-size:3rem;font-weight:900;letter-spacing:8px;color:var(--orange);font-variant-numeric:tabular-nums;}
+.code-box .hint{font-size:.8rem;color:var(--muted);margin-top:6px;}
+
+/* ── RACE ── */
+#race-screen{display:none;padding:0;}
+#auto-bar{background:var(--card);border-bottom:1px solid var(--border);padding:10px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:sticky;top:0;z-index:10;}
+#auto-label{font-size:.75rem;color:var(--muted);}
+#auto-count{font-size:1.6rem;font-weight:900;color:var(--orange);min-width:60px;font-variant-numeric:tabular-nums;}
+.auto-btn{background:#222;color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:.8rem;font-weight:600;cursor:pointer;white-space:nowrap;}
+.auto-btn:active{background:#333;}
+.auto-btn.paused{background:var(--orange);border-color:var(--orange);}
+.session-code-badge{margin-left:auto;background:#111;border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:.75rem;color:var(--muted);}
+.session-code-badge span{color:var(--orange);font-weight:800;letter-spacing:2px;}
+
+#sprint-tabs{display:flex;border-bottom:2px solid var(--border);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+#sprint-tabs::-webkit-scrollbar{display:none;}
+.s-tab{flex:1;min-width:80px;padding:12px 8px;text-align:center;font-size:.85rem;font-weight:700;color:var(--muted);background:var(--card);border:none;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;}
+.s-tab.active{color:var(--orange);border-bottom-color:var(--orange);}
+
+#cards{padding:10px 10px 80px;}
+.p-card{background:var(--card);border:1px solid var(--border);border-radius:14px;margin-bottom:10px;overflow:hidden;transition:border-color .2s;}
+.p-card.running{border-color:var(--green);}
+.p-card.dnf{border-color:var(--red);opacity:.6;}
+.card-top{display:flex;align-items:center;padding:12px 14px;gap:10px;}
+.card-num{font-size:1.3rem;font-weight:900;color:var(--muted);width:28px;flex-shrink:0;}
+.card-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0;}
+.card-name{flex:1;font-size:1rem;font-weight:700;}
+.fault-badge{display:inline-flex;align-items:center;justify-content:center;background:var(--yellow);color:#000;border-radius:50%;width:22px;height:22px;font-size:.75rem;font-weight:900;flex-shrink:0;}
+.fault-badge.zero{background:#333;color:#666;}
+.card-time{font-family:'Courier New',monospace;font-size:1.3rem;font-weight:900;color:var(--muted);font-variant-numeric:tabular-nums;}
+.card-time.running{color:var(--green);}
+.card-time.done{color:#fff;}
+.card-time.dnf-t{color:var(--red);}
+.card-btns{display:grid;grid-template-columns:1fr 1fr 1fr;border-top:1px solid var(--border);}
+.c-btn{padding:16px 8px;border:none;background:transparent;font-size:.8rem;font-weight:800;text-transform:uppercase;letter-spacing:.5px;cursor:pointer;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:4px;touch-action:manipulation;user-select:none;}
+.c-btn:not(:last-child){border-right:1px solid var(--border);}
+.c-btn .icon{font-size:1.4rem;}
+.c-btn:disabled{opacity:.2;cursor:not-allowed;}
+.c-btn.depart:not(:disabled){color:var(--blue);}
+.c-btn.arrivee:not(:disabled){color:var(--green);}
+.c-btn.tombe:not(:disabled){color:var(--red);}
+.c-btn.faute:not(:disabled){color:var(--yellow);}
+.c-btn.depart:active:not(:disabled){background:#1e3a5f;}
+.c-btn.arrivee:active:not(:disabled){background:#14532d;}
+.c-btn.tombe:active:not(:disabled){background:#450a0a;}
+.c-btn.faute:active:not(:disabled){background:#3a2e00;}
+/* Viewer mode — boutons désactivés visuellement */
+.viewer-mode .c-btn{opacity:.25;cursor:not-allowed;pointer-events:none;}
+
+#classement{margin:0 10px 10px;background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+#classement h2{padding:14px 16px 10px;font-size:.85rem;color:var(--orange);text-transform:uppercase;letter-spacing:1px;}
+.rank-row{display:flex;align-items:center;padding:10px 16px;gap:10px;border-top:1px solid var(--border);}
+.rank-pos{font-size:1rem;font-weight:900;width:28px;flex-shrink:0;}
+.rank-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.rank-name{flex:1;font-size:.9rem;font-weight:600;}
+.rank-times{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;}
+.rank-t{font-family:'Courier New',monospace;font-size:.72rem;color:var(--muted);background:#111;border-radius:4px;padding:2px 6px;}
+.rank-t.best{color:var(--green);font-weight:700;}
+.rank-t.dnf-t{color:var(--red);}
+
+#btn-reset{display:block;width:calc(100% - 20px);margin:0 10px 20px;background:#1a1a1a;color:var(--muted);border:1px solid var(--border);border-radius:12px;padding:14px;font-size:.9rem;font-weight:600;cursor:pointer;text-align:center;}
+#btn-reset:active{background:#222;}
+
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);background:#1a1a1a;color:var(--text);border:1px solid var(--border);padding:10px 20px;border-radius:30px;font-size:.9rem;font-weight:600;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;z-index:999;white-space:nowrap;max-width:90vw;overflow:hidden;text-overflow:ellipsis;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+.error-msg{color:var(--red);font-size:.85rem;margin-top:6px;min-height:20px;}
+.viewer-badge{background:#1a1a1a;border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:.8rem;color:var(--muted);text-align:center;margin:8px 10px 0;}
 </style>
 </head>
 <body>
 
-<!-- SETUP -->
-<div id="setup">
+<!-- ══ SCREEN 1 : ACCUEIL ══ -->
+<div id="home-screen" class="screen active">
   <h1>🏍️ Chrono MX</h1>
-  <div class="setup-card">
+
+  <div class="card">
+    <h2>Créer une session</h2>
+    <div class="field">
+      <label>Mot de passe admin</label>
+      <input type="password" id="create-pwd" placeholder="Choisir un mot de passe" autocomplete="new-password">
+    </div>
+    <button class="btn btn-orange" id="btn-go-create">⚙️ Configurer la session</button>
+  </div>
+
+  <div class="divider">ou</div>
+
+  <div class="card">
+    <h2>Rejoindre une session</h2>
+    <div class="field">
+      <label>Code de session</label>
+      <input type="text" id="join-code" placeholder="Ex: AB3XZ" maxlength="5" style="text-transform:uppercase;letter-spacing:4px;font-size:1.3rem;font-weight:800;">
+    </div>
+    <div id="join-error" class="error-msg"></div>
+    <button class="btn btn-dark" id="btn-join">👁️ Rejoindre (spectateur)</button>
+    <button class="btn btn-green" id="btn-join-admin">🔑 Rejoindre (admin)</button>
+  </div>
+</div>
+
+<!-- ══ SCREEN 2 : ADMIN PASSWORD pour rejoindre ══ -->
+<div id="admin-join-screen" class="screen">
+  <h1>🔑 Accès Admin</h1>
+  <div class="card">
+    <div class="field">
+      <label>Mot de passe de la session</label>
+      <input type="password" id="admin-join-pwd" placeholder="Mot de passe admin" autocomplete="current-password">
+    </div>
+    <div id="admin-join-error" class="error-msg"></div>
+    <button class="btn btn-orange" id="btn-admin-join-confirm">Confirmer</button>
+    <button class="btn btn-dark" id="btn-admin-join-back">← Retour</button>
+  </div>
+</div>
+
+<!-- ══ SCREEN 3 : CONFIG SESSION ══ -->
+<div id="config-screen" class="screen">
+  <h1>⚙️ Configuration</h1>
+
+  <div class="card">
     <h2>Participants</h2>
     <div id="p-list"></div>
   </div>
-  <div class="setup-card">
+
+  <div class="card">
     <h2>Options</h2>
     <div class="options-row">
       <div class="opt-group">
@@ -131,40 +194,83 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
       </div>
     </div>
   </div>
-  <button id="btn-launch">🚦 Lancer la session</button>
+
+  <button class="btn btn-orange" id="btn-launch">🚦 Créer la session</button>
+  <button class="btn btn-dark" id="btn-config-back">← Retour</button>
 </div>
 
-<!-- RACE -->
-<div id="race">
+<!-- ══ SCREEN 4 : CODE SESSION ══ -->
+<div id="code-screen" class="screen">
+  <h1>✅ Session créée</h1>
+  <div class="code-box">
+    <div class="code" id="display-code">-----</div>
+    <div class="hint">Partagez ce code aux spectateurs</div>
+  </div>
+  <button class="btn btn-orange" id="btn-enter-race">🏁 Entrer dans la course</button>
+</div>
+
+<!-- ══ RACE ══ -->
+<div id="race-screen">
   <div id="auto-bar">
-    <span id="auto-label">Prochain départ :</span>
-    <span id="auto-count">--</span>
+    <span id="auto-label">En attente :</span>
+    <span id="auto-count">⏳</span>
     <button class="auto-btn" id="btn-pause">⏸ Pause</button>
     <button class="auto-btn" id="btn-force">🚀 Forcer</button>
+    <div class="session-code-badge">Code : <span id="race-code-badge">-----</span></div>
   </div>
   <div id="sprint-tabs"></div>
+  <div id="viewer-badge-wrap"></div>
   <div id="cards"></div>
   <div id="classement">
     <h2>🏆 Classement</h2>
     <div id="rank-list"></div>
   </div>
-  <button id="btn-reset">🔄 Nouvelle session</button>
+  <button id="btn-reset">🔄 Quitter la session</button>
 </div>
 
 <div id="toast"></div>
 
 <script>
-const COLORS = ['#e74c3c','#e67e22','#f1c40f','#2ecc71','#1abc9c','#3498db','#9b59b6','#e91e63','#00bcd4','#8bc34a'];
-let cfg = { participants:[], mode:'auto', interval:320, sprints:3 };
-let data = [];
-let curSprint = 0;
-let autoSec = 0;
-let autoPaused = false;
-let tickId = null;
-let rafId = null;
+// ══════════════════════════════════════
+// CONSTANTS & STATE
+// ══════════════════════════════════════
+const COLORS=['#e74c3c','#e67e22','#f1c40f','#2ecc71','#1abc9c','#3498db','#9b59b6','#e91e63','#00bcd4','#8bc34a'];
 
-// ── SETUP BUILD ──
-(function() {
+let appState = {
+  screen: 'home',       // home | admin-join | config | code | race
+  sessionCode: null,
+  adminToken: null,
+  isAdmin: false,
+  pendingAdminCode: null,
+  config: null,
+  data: null,
+  autoState: null,
+  curSprint: 0,
+  ws: null,
+  rafId: null,
+  // local timestamps: data from server has start as epoch ms
+};
+
+// ══════════════════════════════════════
+// SCREEN ROUTER
+// ══════════════════════════════════════
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('race-screen').style.display = 'none';
+  const el = document.getElementById(name + '-screen');
+  if (el) { el.classList.add('active'); }
+  appState.screen = name;
+}
+function showRace() {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('race-screen').style.display = 'block';
+  appState.screen = 'race';
+}
+
+// ══════════════════════════════════════
+// SETUP PARTICIPANTS LIST
+// ══════════════════════════════════════
+(function buildParticipantList() {
   const list = document.getElementById('p-list');
   for (let i = 0; i < 10; i++) {
     const row = document.createElement('div');
@@ -179,42 +285,170 @@ let rafId = null;
   });
 })();
 
-// ── LAUNCH ──
-document.getElementById('btn-launch').addEventListener('click', () => {
-  cfg.participants = Array.from({length:10}, (_,i) => ({
-    name:  document.getElementById(`pn${i}`).value.trim() || `Pilote ${i+1}`,
-    color: document.getElementById(`pc${i}`).value
-  }));
-  cfg.mode     = document.getElementById('mode-sel').value;
-  cfg.interval = parseInt(document.getElementById('interval-in').value) || 320;
-  cfg.sprints  = parseInt(document.getElementById('sprints-in').value) || 3;
-
-  data = Array.from({length: cfg.sprints}, () =>
-    cfg.participants.map(() => ({ state:'pending', start:null, elapsed:null, faults:0 }))
-  );
-  curSprint = 0;
-
-  document.getElementById('setup').style.display = 'none';
-  document.getElementById('race').style.display = 'block';
-
-  buildTabs();
-  renderCards();
-  renderRank();
-
-  if (cfg.mode === 'auto') {
-    document.getElementById('auto-bar').style.display = 'flex';
-    startAuto();
-  } else {
-    document.getElementById('auto-bar').style.display = 'none';
-  }
-  startRAF();
+// ══════════════════════════════════════
+// HOME SCREEN
+// ══════════════════════════════════════
+document.getElementById('btn-go-create').addEventListener('click', () => {
+  const pwd = document.getElementById('create-pwd').value.trim();
+  if (!pwd) { alert('Entrez un mot de passe admin'); return; }
+  showScreen('config');
 });
 
-// ── TABS ──
-function buildTabs() {
+document.getElementById('btn-join').addEventListener('click', () => joinSession(false));
+document.getElementById('btn-join-admin').addEventListener('click', () => {
+  const code = document.getElementById('join-code').value.trim().toUpperCase();
+  if (code.length < 3) { document.getElementById('join-error').textContent = 'Code invalide'; return; }
+  appState.pendingAdminCode = code;
+  document.getElementById('admin-join-error').textContent = '';
+  document.getElementById('admin-join-pwd').value = '';
+  showScreen('admin-join');
+});
+
+async function joinSession(asAdmin, adminToken = null) {
+  const code = (appState.pendingAdminCode || document.getElementById('join-code').value.trim()).toUpperCase();
+  document.getElementById('join-error').textContent = '';
+  try {
+    const res = await fetch('/api/session/join', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ code })
+    });
+    const json = await res.json();
+    if (!res.ok) { document.getElementById('join-error').textContent = json.error; return; }
+    appState.sessionCode = json.code;
+    appState.config = json.config;
+    appState.isAdmin = asAdmin;
+    appState.adminToken = adminToken;
+    connectWS();
+  } catch(e) {
+    document.getElementById('join-error').textContent = 'Erreur réseau';
+  }
+}
+
+// ══════════════════════════════════════
+// ADMIN JOIN SCREEN
+// ══════════════════════════════════════
+document.getElementById('btn-admin-join-confirm').addEventListener('click', async () => {
+  const pwd = document.getElementById('admin-join-pwd').value.trim();
+  const code = appState.pendingAdminCode;
+  document.getElementById('admin-join-error').textContent = '';
+  try {
+    const res = await fetch('/api/session/admin', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ code, adminPassword: pwd })
+    });
+    const json = await res.json();
+    if (!res.ok) { document.getElementById('admin-join-error').textContent = json.error; return; }
+    appState.adminToken = json.adminToken;
+    await joinSession(true, json.adminToken);
+  } catch(e) {
+    document.getElementById('admin-join-error').textContent = 'Erreur réseau';
+  }
+});
+document.getElementById('btn-admin-join-back').addEventListener('click', () => showScreen('home'));
+
+// ══════════════════════════════════════
+// CONFIG SCREEN
+// ══════════════════════════════════════
+document.getElementById('btn-config-back').addEventListener('click', () => showScreen('home'));
+
+document.getElementById('btn-launch').addEventListener('click', async () => {
+  const pwd = document.getElementById('create-pwd').value.trim();
+  const participants = Array.from({length:10}, (_,i) => ({
+    name: document.getElementById(`pn${i}`).value.trim() || `Pilote ${i+1}`,
+    color: document.getElementById(`pc${i}`).value
+  }));
+  const config = {
+    participants,
+    mode: document.getElementById('mode-sel').value,
+    interval: parseInt(document.getElementById('interval-in').value) || 320,
+    sprints: parseInt(document.getElementById('sprints-in').value) || 3,
+    currentSprint: 0
+  };
+  try {
+    const res = await fetch('/api/session/create', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ config, adminPassword: pwd })
+    });
+    const json = await res.json();
+    if (!res.ok) { alert(json.error); return; }
+    appState.sessionCode = json.code;
+    appState.adminToken = json.adminToken;
+    appState.isAdmin = true;
+    appState.config = config;
+    document.getElementById('display-code').textContent = json.code;
+    showScreen('code');
+  } catch(e) { alert('Erreur réseau'); }
+});
+
+// ══════════════════════════════════════
+// CODE SCREEN
+// ══════════════════════════════════════
+document.getElementById('btn-enter-race').addEventListener('click', () => {
+  connectWS();
+});
+
+// ══════════════════════════════════════
+// WEBSOCKET
+// ══════════════════════════════════════
+function connectWS() {
+  if (appState.ws) { appState.ws.close(); appState.ws = null; }
+  const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+  const ws = new WebSocket(`${proto}://${location.host}`);
+  appState.ws = ws;
+
+  ws.onopen = () => {
+    ws.send(JSON.stringify({
+      type: 'join',
+      code: appState.sessionCode,
+      adminToken: appState.adminToken || null
+    }));
+  };
+
+  ws.onmessage = (ev) => {
+    const msg = JSON.parse(ev.data);
+    if (msg.type === 'error') { toast('❌ ' + msg.msg); return; }
+    if (msg.type === 'state') {
+      appState.isAdmin = msg.isAdmin !== undefined ? msg.isAdmin : appState.isAdmin;
+      appState.config = msg.config;
+      appState.data = msg.data;
+      appState.autoState = msg.autoState;
+      if (appState.screen !== 'race') {
+        document.getElementById('race-code-badge').textContent = appState.sessionCode;
+        buildSprintTabs();
+        renderCards();
+        renderRank();
+        updateAutoBar();
+        updateAdminControls();
+        startRAF();
+        showRace();
+      } else {
+        // Mise à jour partielle
+        syncCards();
+        renderRank();
+        updateAutoBar();
+      }
+    }
+  };
+
+  ws.onclose = () => {
+    if (appState.screen === 'race') toast('⚠️ Connexion perdue — reconnexion...');
+    setTimeout(() => { if (appState.screen === 'race') connectWS(); }, 2000);
+  };
+}
+
+function sendWS(msg) {
+  if (appState.ws && appState.ws.readyState === WebSocket.OPEN) {
+    appState.ws.send(JSON.stringify(msg));
+  }
+}
+
+// ══════════════════════════════════════
+// SPRINT TABS
+// ══════════════════════════════════════
+function buildSprintTabs() {
   const el = document.getElementById('sprint-tabs');
   el.innerHTML = '';
-  for (let s = 0; s < cfg.sprints; s++) {
+  for (let s = 0; s < appState.config.sprints; s++) {
     const b = document.createElement('button');
     b.className = 's-tab' + (s===0?' active':'');
     b.textContent = `Sprint ${s+1}`;
@@ -223,31 +457,39 @@ function buildTabs() {
   }
 }
 function switchSprint(s) {
-  curSprint = s;
+  appState.curSprint = s;
   document.querySelectorAll('.s-tab').forEach((t,i) => t.classList.toggle('active', i===s));
   renderCards();
   renderRank();
 }
 
-// ── RENDER CARDS (full, on switch/launch) ──
+// ══════════════════════════════════════
+// RENDER CARDS (full)
+// ══════════════════════════════════════
 function renderCards() {
   const el = document.getElementById('cards');
   el.innerHTML = '';
-  cfg.participants.forEach((p, i) => {
-    const e = data[curSprint][i];
+
+  // Viewer badge
+  const vb = document.getElementById('viewer-badge-wrap');
+  vb.innerHTML = appState.isAdmin ? '' : '<div class="viewer-badge">👁️ Mode spectateur — lecture seule</div>';
+
+  const sprint = appState.data[appState.curSprint];
+  appState.config.participants.forEach((p, i) => {
+    const e = sprint[i];
     const card = document.createElement('div');
-    card.className = 'p-card' + (e.state==='running'?' running':e.state==='dnf'?' dnf':'');
-    card.id = `card-${i}`;
-    const canT = e.state==='running'||e.state==='pending';
     const isRunning = e.state==='running';
     const isDone    = e.state==='done';
     const isDnf     = e.state==='dnf';
+    const canT = e.state==='running'||e.state==='pending';
+    card.className = 'p-card' + (isRunning?' running':isDnf?' dnf':'') + (appState.isAdmin?'':' viewer-mode');
+    card.id = `card-${i}`;
     card.innerHTML = `
       <div class="card-top">
         <span class="card-num">${i+1}</span>
         <div class="card-dot" style="background:${p.color}"></div>
         <span class="card-name">${p.name}</span>
-        <span class="fault-badge${e.faults===0?' zero':''}" id="cf-${i}">${e.faults}</span>
+        <span class="fault-badge${(e.faults||0)===0?' zero':''}" id="cf-${i}">${e.faults||0}</span>
         <span class="card-time ${isRunning?'running':isDone?'done':isDnf?'dnf-t':''}" id="ct-${i}">${getTimeStr(e)}</span>
       </div>
       <div class="card-btns">
@@ -262,14 +504,53 @@ function renderCards() {
         </button>
       </div>`;
     el.appendChild(card);
-
-    attachBtn(`cd-${i}`, i, 'da'); // départ OU arrivée selon état
-    attachBtn(`cj-${i}`, i, 'f'); // faute
-    attachBtn(`cb-${i}`, i, 't');
+    if (appState.isAdmin) {
+      attachBtn(`cd-${i}`, i, 'da');
+      attachBtn(`cj-${i}`, i, 'f');
+      attachBtn(`cb-${i}`, i, 't');
+    }
   });
 }
 
-// ── BUTTON EVENTS (no double-fire) ──
+// ══════════════════════════════════════
+// SYNC CARDS (mise à jour sans re-render)
+// ══════════════════════════════════════
+function syncCards() {
+  const sprint = appState.data[appState.curSprint];
+  sprint.forEach((e, i) => {
+    const card = document.getElementById(`card-${i}`);
+    if (!card) return;
+    const isRunning = e.state==='running';
+    const isDone    = e.state==='done';
+    const isDnf     = e.state==='dnf';
+    const canT = e.state==='running'||e.state==='pending';
+
+    card.className = 'p-card' + (isRunning?' running':isDnf?' dnf':'') + (appState.isAdmin?'':' viewer-mode');
+
+    const ct = document.getElementById(`ct-${i}`);
+    if (ct && e.state !== 'running') {
+      ct.className = 'card-time ' + (isDone?'done':isDnf?'dnf-t':'');
+      ct.textContent = getTimeStr(e);
+    }
+    const cf = document.getElementById(`cf-${i}`);
+    if (cf) { cf.textContent = e.faults||0; cf.className = 'fault-badge' + ((e.faults||0)===0?' zero':''); }
+
+    const bd = document.getElementById(`cd-${i}`);
+    if (bd) {
+      bd.disabled = isDone||isDnf;
+      bd.className = `c-btn ${isRunning?'arrivee':'depart'}`;
+      bd.innerHTML = `<span class="icon">${isRunning?'🏁':'🚦'}</span>${isRunning?'Arrivée':'Départ'}`;
+    }
+    const bj = document.getElementById(`cj-${i}`);
+    if (bj) bj.disabled = isDnf;
+    const bt = document.getElementById(`cb-${i}`);
+    if (bt) bt.disabled = !canT||isDnf;
+  });
+}
+
+// ══════════════════════════════════════
+// BUTTON EVENTS
+// ══════════════════════════════════════
 function attachBtn(id, i, type) {
   const btn = document.getElementById(id);
   if (!btn) return;
@@ -279,170 +560,92 @@ function attachBtn(id, i, type) {
     const now = Date.now();
     if (now - lastFire < 300) return;
     lastFire = now;
-    act(i, type);
+    actLocal(i, type);
   };
   btn.addEventListener('touchend', fire, { passive: false });
   btn.addEventListener('click', fire);
 }
 
-// ── ACTIONS ──
-function act(i, type) {
-  const e = data[curSprint][i];
+function actLocal(i, type) {
+  if (!appState.isAdmin) return;
+  const e = appState.data[appState.curSprint][i];
+  let action = type;
   if (type === 'da') {
-    // Même bouton : départ si pending, arrivée si running
-    if (e.state === 'pending') type = 'd';
-    else if (e.state === 'running') type = 'a';
+    if (e.state === 'pending') action = 'd';
+    else if (e.state === 'running') action = 'a';
     else return;
   }
-  if (type === 'd') {
-    if (e.state !== 'pending') return;
-    e.state = 'running';
-    e.start = performance.now();
-    if (cfg.mode === 'auto') {
-      if (!autoStarted) {
-        // 1er départ : lance le timer pour la première fois
-        launchAutoTimer();
-      } else {
-        // Départs suivants : reset le compteur
-        autoSec = cfg.interval;
-        updateAutoDisplay();
-      }
-    }
-    toast(`🚦 ${cfg.participants[i].name} — Départ !`);
-  } else if (type === 'a') {
-    if (e.state !== 'running') return;
-    e.elapsed = performance.now() - e.start;
-    e.state = 'done';
-    toast(`🏁 ${cfg.participants[i].name} — ${fmt(e.elapsed)}`);
-  } else if (type === 't') {
-    if (e.state === 'dnf') return;
-    if (e.state === 'running') e.elapsed = performance.now() - e.start;
-    e.state = 'dnf';
-    toast(`💥 ${cfg.participants[i].name} — DNF`);
-  } else if (type === 'f') {
-    if (e.state === 'dnf') return;
-    e.faults = (e.faults || 0) + 1;
-    toast(`🟨 ${cfg.participants[i].name} — Faute n°${e.faults}`);
-    // Mise à jour rapide du badge sans re-render complet
-    const fb = document.getElementById(`cf-${i}`);
-    if (fb) { fb.textContent = e.faults; fb.className = 'fault-badge'; }
-    renderRank();
-    return; // pas besoin de updateCard complet
-  }
-  updateCard(i);
-  renderRank();
+  sendWS({ type: 'action', sprintIdx: appState.curSprint, piloteIdx: i, action });
 }
 
-// ── SURGICAL CARD UPDATE (no full re-render) ──
-function updateCard(i) {
-  const e = data[curSprint][i];
-  const card = document.getElementById(`card-${i}`);
-  if (!card) return;
-  card.className = 'p-card' + (e.state==='running'?' running':e.state==='dnf'?' dnf':'');
-  const ct = document.getElementById(`ct-${i}`);
-  if (ct) {
-    ct.className = 'card-time ' + (e.state==='running'?'running':e.state==='done'?'done':e.state==='dnf'?'dnf-t':'');
-    if (e.state !== 'running') ct.textContent = getTimeStr(e);
-  }
-  const isRunning = e.state==='running';
-  const isDone    = e.state==='done';
-  const isDnf     = e.state==='dnf';
-  const canT = e.state==='running'||e.state==='pending';
-
-  // Bouton départ/arrivée (même bouton)
-  const bd = document.getElementById(`cd-${i}`);
-  if (bd) {
-    bd.disabled = isDone || isDnf;
-    bd.className = `c-btn ${isRunning?'arrivee':'depart'}`;
-    bd.innerHTML = `<span class="icon">${isRunning?'🏁':'🚦'}</span>${isRunning?'Arrivée':'Départ'}`;
-  }
-  // Bouton tombé
-  const bt = document.getElementById(`cb-${i}`);
-  if (bt) bt.disabled = !canT || isDnf;
-  // Bouton faute
-  const bj = document.getElementById(`cj-${i}`);
-  if (bj) bj.disabled = isDnf;
+// ══════════════════════════════════════
+// AUTO BAR
+// ══════════════════════════════════════
+function updateAdminControls() {
+  const show = appState.isAdmin && appState.config.mode === 'auto';
+  document.getElementById('auto-bar').style.display = show ? 'flex' : 'none';
+  // Masquer boutons si spectateur
+  document.getElementById('btn-pause').style.display = appState.isAdmin ? '' : 'none';
+  document.getElementById('btn-force').style.display = appState.isAdmin ? '' : 'none';
 }
 
-// ── RAF LOOP (live chrono, zero latency) ──
+function updateAutoBar() {
+  if (!appState.autoState) return;
+  const { started, paused, sec } = appState.autoState;
+  const el = document.getElementById('auto-count');
+  const lbl = document.getElementById('auto-label');
+  if (!started) {
+    el.textContent = '⏳'; el.style.color = '#666';
+    if (lbl) lbl.textContent = 'En attente du 1er départ :';
+  } else if (paused) {
+    el.textContent = '⏸'; el.style.color = '#666';
+    if (lbl) lbl.textContent = 'Prochain départ :';
+  } else {
+    el.textContent = sec + 's';
+    el.style.color = sec <= 10 ? '#ef4444' : '#ff6600';
+    if (lbl) lbl.textContent = 'Prochain départ :';
+  }
+  const pb = document.getElementById('btn-pause');
+  if (pb) { pb.textContent = paused ? '▶ Reprendre' : '⏸ Pause'; pb.classList.toggle('paused', paused); }
+}
+
+document.getElementById('btn-pause').addEventListener('click', () => {
+  if (!appState.isAdmin) return;
+  sendWS({ type: 'auto_pause' });
+});
+document.getElementById('btn-force').addEventListener('click', () => {
+  if (!appState.isAdmin) return;
+  sendWS({ type: 'auto_force' });
+});
+
+// ══════════════════════════════════════
+// RAF — live chrono
+// ══════════════════════════════════════
 function startRAF() {
-  cancelAnimationFrame(rafId);
+  cancelAnimationFrame(appState.rafId);
   function loop() {
-    const now = performance.now();
-    data[curSprint].forEach((e, i) => {
+    if (!appState.data) { appState.rafId = requestAnimationFrame(loop); return; }
+    const now = Date.now();
+    appState.data[appState.curSprint].forEach((e, i) => {
       if (e.state !== 'running') return;
       const el = document.getElementById(`ct-${i}`);
       if (el) el.textContent = fmt(now - e.start);
     });
-    rafId = requestAnimationFrame(loop);
+    appState.rafId = requestAnimationFrame(loop);
   }
-  rafId = requestAnimationFrame(loop);
+  appState.rafId = requestAnimationFrame(loop);
 }
 
-// ── AUTO TIMER ──
-let autoStarted = false; // timer ne tourne pas avant le 1er départ
-
-function startAuto() {
-  autoStarted = false;
-  autoPaused = false;
-  clearInterval(tickId);
-  // Affiche "En attente..." jusqu'au 1er départ
-  const el = document.getElementById('auto-count');
-  if (el) { el.textContent = '⏳'; el.style.color = '#666'; }
-  const lbl = document.getElementById('auto-label');
-  if (lbl) lbl.textContent = 'En attente du 1er départ :';
-}
-
-function launchAutoTimer() {
-  // Appelé au 1er départ manuel du Pilote 1
-  autoStarted = true;
-  autoSec = cfg.interval;
-  autoPaused = false;
-  const lbl = document.getElementById('auto-label');
-  if (lbl) lbl.textContent = 'Prochain départ :';
-  updateAutoDisplay();
-  clearInterval(tickId);
-  tickId = setInterval(() => {
-    if (autoPaused) return;
-    autoSec--;
-    updateAutoDisplay();
-    if (autoSec <= 0) { fireAutoDepart(); autoSec = cfg.interval; }
-  }, 1000);
-}
-
-function fireAutoDepart() {
-  const idx = data[curSprint].findIndex(e => e.state === 'pending');
-  if (idx !== -1) act(idx, 'd');
-}
-function updateAutoDisplay() {
-  const el = document.getElementById('auto-count');
-  if (!el) return;
-  if (!autoStarted) { el.textContent = '⏳'; el.style.color = '#666'; return; }
-  if (autoPaused) { el.textContent = '⏸'; el.style.color = '#666'; return; }
-  el.textContent = autoSec + 's';
-  el.style.color = autoSec <= 10 ? '#ef4444' : '#ff6600';
-}
-document.getElementById('btn-pause').addEventListener('click', function() {
-  autoPaused = !autoPaused;
-  this.textContent = autoPaused ? '▶ Reprendre' : '⏸ Pause';
-  this.classList.toggle('paused', autoPaused);
-  updateAutoDisplay();
-});
-document.getElementById('btn-force').addEventListener('click', () => {
-  if (!autoStarted) { launchAutoTimer(); return; }
-  autoSec = cfg.interval;
-  fireAutoDepart();
-  updateAutoDisplay();
-});
-
-// ── CLASSEMENT ──
+// ══════════════════════════════════════
+// CLASSEMENT
+// ══════════════════════════════════════
 function renderRank() {
   const el = document.getElementById('rank-list');
   el.innerHTML = '';
-  const rows = cfg.participants.map((p, i) => {
-    const times = data.map(s => s[i]);
+  const rows = appState.config.participants.map((p, i) => {
+    const times = appState.data.map(s => s[i]);
     const valid = times.filter(e => e.state==='done').map(e => e.elapsed);
-    const totalFaults = data.reduce((sum, s) => sum + (s[i].faults||0), 0);
+    const totalFaults = appState.data.reduce((sum, s) => sum + (s[i].faults||0), 0);
     return { p, i, times, best: valid.length ? Math.min(...valid) : null, totalFaults };
   });
   rows.sort((a,b) => {
@@ -456,7 +659,7 @@ function renderRank() {
     const div = document.createElement('div');
     div.className = 'rank-row';
     let timesHtml = '';
-    for (let s = 0; s < cfg.sprints; s++) {
+    for (let s = 0; s < appState.config.sprints; s++) {
       const e = row.times[s];
       const isBest = e.state==='done' && row.best===e.elapsed;
       if (e.state==='done')     timesHtml += `<span class="rank-t${isBest?' best':''}" title="Sprint ${s+1}">S${s+1} ${fmt(e.elapsed)}</span>`;
@@ -468,40 +671,44 @@ function renderRank() {
       <div class="rank-dot" style="background:${row.p.color}"></div>
       <span class="rank-name">${row.p.name}</span>
       <div class="rank-times">${timesHtml}</div>
-      ${row.totalFaults>0?`<span class="fault-badge" title="Fautes totales">${row.totalFaults}</span>`:''}`;
+      ${row.totalFaults>0?`<span class="fault-badge" title="Fautes">${row.totalFaults}</span>`:''}`;
     el.appendChild(div);
   });
 }
 
-// ── RESET ──
+// ══════════════════════════════════════
+// RESET / QUIT
+// ══════════════════════════════════════
 document.getElementById('btn-reset').addEventListener('click', () => {
-  clearInterval(tickId);
-  cancelAnimationFrame(rafId);
-  document.getElementById('race').style.display = 'none';
-  document.getElementById('setup').style.display = 'block';
+  cancelAnimationFrame(appState.rafId);
+  if (appState.ws) { appState.ws.onclose = null; appState.ws.close(); appState.ws = null; }
+  appState = { ...appState, sessionCode:null, adminToken:null, isAdmin:false, config:null, data:null, autoState:null, curSprint:0, ws:null, rafId:null };
+  document.getElementById('join-code').value = '';
+  document.getElementById('create-pwd').value = '';
+  document.getElementById('join-error').textContent = '';
+  showScreen('home');
 });
 
-// ── UTILS ──
+// ══════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════
 function fmt(ms) {
-  if (ms == null) return '--:--.--';
-  const m  = Math.floor(ms / 60000);
-  const s  = Math.floor((ms % 60000) / 1000);
-  const cs = Math.floor((ms % 1000) / 10);
+  if (ms==null) return '--:--.--';
+  const m=Math.floor(ms/60000), s=Math.floor((ms%60000)/1000), cs=Math.floor((ms%1000)/10);
   return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}.${String(cs).padStart(2,'0')}`;
 }
 function getTimeStr(e) {
-  if (e.state==='running') return fmt(performance.now() - e.start);
+  if (e.state==='running') return fmt(Date.now()-e.start);
   if (e.state==='done')    return fmt(e.elapsed);
   if (e.state==='dnf')     return 'DNF';
   return '--:--.--';
 }
-let toastTimer = null;
+let toastTimer=null;
 function toast(msg) {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+  toastTimer=setTimeout(()=>el.classList.remove('show'),2500);
 }
 </script>
 </body>
