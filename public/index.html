@@ -2,540 +2,448 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <title>🏍️ Chrono Motocross</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: 'Segoe UI', sans-serif;
-    background: #0d0d0d;
-    color: #f0f0f0;
-    min-height: 100vh;
-    padding: 20px;
-  }
-  h1 {
-    text-align: center;
-    font-size: 2rem;
-    color: #ff6600;
-    text-transform: uppercase;
-    letter-spacing: 4px;
-    margin-bottom: 20px;
-    text-shadow: 0 0 20px #ff6600aa;
-  }
+:root {
+  --orange: #ff6600;
+  --green: #22c55e;
+  --blue: #3b82f6;
+  --red: #ef4444;
+  --bg: #0a0a0a;
+  --card: #161616;
+  --border: #2a2a2a;
+  --text: #f0f0f0;
+  --muted: #666;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); overscroll-behavior: none; }
 
-  /* ── SETUP ── */
-  #setup-panel {
-    background: #1a1a1a;
-    border: 1px solid #333;
-    border-radius: 12px;
-    padding: 20px;
-    margin-bottom: 24px;
-  }
-  #setup-panel h2 { color: #ff6600; margin-bottom: 14px; font-size: 1.1rem; }
-  .setup-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 10px;
-    margin-bottom: 16px;
-  }
-  .participant-setup {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: #222;
-    border-radius: 8px;
-    padding: 8px 12px;
-    border: 1px solid #333;
-  }
-  .participant-setup .num { font-weight: bold; color: #ff6600; width: 22px; flex-shrink: 0; }
-  .participant-setup input[type="text"] {
-    flex: 1;
-    background: #111;
-    border: 1px solid #444;
-    border-radius: 6px;
-    color: #fff;
-    padding: 6px 10px;
-    font-size: 0.9rem;
-  }
-  .participant-setup input[type="color"] {
-    width: 36px; height: 32px;
-    border: none; border-radius: 6px;
-    cursor: pointer; background: none; padding: 0;
-  }
-  .mode-row {
-    display: flex; align-items: center; gap: 16px;
-    flex-wrap: wrap; margin-bottom: 14px;
-  }
-  .mode-row label { color: #aaa; font-size: 0.9rem; }
-  .mode-row select, .mode-row input[type="number"] {
-    background: #111; border: 1px solid #444;
-    border-radius: 6px; color: #fff;
-    padding: 6px 10px; font-size: 0.9rem;
-  }
-  #btn-start-session {
-    display: block; margin: 0 auto;
-    background: #ff6600; color: #fff;
-    border: none; border-radius: 8px;
-    padding: 12px 40px; font-size: 1.1rem;
-    font-weight: bold; cursor: pointer;
-    text-transform: uppercase; letter-spacing: 2px;
-    transition: background 0.2s;
-  }
-  #btn-start-session:hover { background: #e05500; }
+/* SETUP */
+#setup { padding: 16px; max-width: 600px; margin: 0 auto; }
+#setup h1 { text-align: center; font-size: 1.5rem; color: var(--orange); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 20px; text-shadow: 0 0 16px #ff660066; }
+.setup-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+.setup-card h2 { font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+.p-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.p-row:last-child { border-bottom: none; }
+.p-num { font-weight: 800; color: var(--orange); width: 24px; font-size: 1rem; flex-shrink: 0; }
+.p-row input[type="text"] { flex: 1; background: #0d0d0d; border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 10px 12px; font-size: 1rem; min-width: 0; }
+.p-row input[type="text"]:focus { outline: none; border-color: var(--orange); }
+.p-row input[type="color"] { width: 42px; height: 42px; border: 2px solid var(--border); border-radius: 8px; cursor: pointer; background: none; padding: 2px; flex-shrink: 0; }
+.options-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+.opt-group { display: flex; flex-direction: column; gap: 4px; }
+.opt-group label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.opt-group select, .opt-group input[type="number"] { background: #0d0d0d; border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 10px 12px; font-size: 0.95rem; }
+#btn-launch { width: 100%; padding: 16px; background: var(--orange); color: #fff; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; cursor: pointer; margin-top: 4px; transition: background 0.15s, transform 0.1s; }
+#btn-launch:active { background: #cc5200; transform: scale(0.97); }
 
-  /* ── RACE ── */
-  #race-panel { display: none; }
+/* RACE */
+#race { display: none; }
+#auto-bar { background: var(--card); border-bottom: 1px solid var(--border); padding: 10px 14px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; position: sticky; top: 0; z-index: 10; }
+#auto-label { font-size: 0.75rem; color: var(--muted); }
+#auto-count { font-size: 1.6rem; font-weight: 900; color: var(--orange); min-width: 60px; font-variant-numeric: tabular-nums; }
+.auto-btn { background: #222; color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; font-size: 0.8rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.auto-btn:active { background: #333; }
+.auto-btn.paused { background: var(--orange); border-color: var(--orange); }
 
-  #auto-bar {
-    background: #1a1a1a; border: 1px solid #333;
-    border-radius: 10px; padding: 14px 20px;
-    margin-bottom: 20px;
-    display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
-  }
-  #auto-bar .label { color: #aaa; font-size: 0.9rem; }
-  #auto-countdown {
-    font-size: 2rem; font-weight: bold;
-    color: #ff6600; min-width: 80px; text-align: center;
-  }
-  #auto-bar button {
-    background: #333; color: #fff;
-    border: 1px solid #555; border-radius: 6px;
-    padding: 8px 18px; cursor: pointer;
-    font-size: 0.85rem; transition: background 0.2s;
-  }
-  #auto-bar button:hover { background: #444; }
-  #auto-bar button.active { background: #ff6600; border-color: #ff6600; }
+/* TABS */
+#sprint-tabs { display: flex; border-bottom: 2px solid var(--border); overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+#sprint-tabs::-webkit-scrollbar { display: none; }
+.s-tab { flex: 1; min-width: 80px; padding: 12px 8px; text-align: center; font-size: 0.85rem; font-weight: 700; color: var(--muted); background: var(--card); border: none; cursor: pointer; border-bottom: 3px solid transparent; white-space: nowrap; }
+.s-tab.active { color: var(--orange); border-bottom-color: var(--orange); }
 
-  .sprint-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
-  .sprint-tab {
-    background: #222; border: 1px solid #444;
-    border-radius: 8px 8px 0 0;
-    padding: 8px 24px; cursor: pointer;
-    color: #aaa; font-weight: bold; transition: all 0.2s;
-  }
-  .sprint-tab.active { background: #ff6600; border-color: #ff6600; color: #fff; }
+/* CARDS */
+#cards { padding: 10px 10px 80px; }
+.p-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; margin-bottom: 10px; overflow: hidden; transition: border-color 0.2s; }
+.p-card.running { border-color: var(--green); }
+.p-card.dnf { border-color: var(--red); opacity: 0.6; }
+.card-top { display: flex; align-items: center; padding: 12px 14px; gap: 10px; }
+.card-num { font-size: 1.3rem; font-weight: 900; color: var(--muted); width: 28px; flex-shrink: 0; }
+.card-dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+.card-name { flex: 1; font-size: 1rem; font-weight: 700; }
+.card-time { font-family: 'Courier New', monospace; font-size: 1.3rem; font-weight: 900; color: var(--muted); font-variant-numeric: tabular-nums; }
+.card-time.running { color: var(--green); }
+.card-time.done { color: #fff; }
+.card-time.dnf-t { color: var(--red); }
+.card-btns { display: grid; grid-template-columns: 1fr 1fr 1fr; border-top: 1px solid var(--border); }
+.c-btn { padding: 16px 8px; border: none; background: transparent; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; color: var(--muted); display: flex; flex-direction: column; align-items: center; gap: 4px; touch-action: manipulation; user-select: none; }
+.c-btn:not(:last-child) { border-right: 1px solid var(--border); }
+.c-btn .icon { font-size: 1.4rem; }
+.c-btn:disabled { opacity: 0.2; cursor: not-allowed; }
+.c-btn.depart:not(:disabled) { color: var(--blue); }
+.c-btn.arrivee:not(:disabled) { color: var(--green); }
+.c-btn.tombe:not(:disabled) { color: var(--red); }
+.c-btn.depart:active:not(:disabled) { background: #1e3a5f; }
+.c-btn.arrivee:active:not(:disabled) { background: #14532d; }
+.c-btn.tombe:active:not(:disabled) { background: #450a0a; }
 
-  .table-wrap { overflow-x: auto; border-radius: 0 10px 10px 10px; border: 1px solid #333; }
-  table { width: 100%; border-collapse: collapse; background: #1a1a1a; min-width: 700px; }
-  thead tr { background: #222; }
-  th {
-    padding: 12px 10px; text-align: center;
-    font-size: 0.8rem; text-transform: uppercase;
-    letter-spacing: 1px; color: #888;
-    border-bottom: 2px solid #333;
-  }
-  td {
-    padding: 10px; text-align: center;
-    border-bottom: 1px solid #2a2a2a;
-    font-size: 0.9rem; vertical-align: middle;
-  }
-  tr:last-child td { border-bottom: none; }
-  tr.disqualified td { opacity: 0.4; text-decoration: line-through; }
-  tr.running td { background: #1f2a1a; }
+/* CLASSEMENT */
+#classement { margin: 0 10px 10px; background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+#classement h2 { padding: 14px 16px 10px; font-size: 0.85rem; color: var(--orange); text-transform: uppercase; letter-spacing: 1px; }
+.rank-row { display: flex; align-items: center; padding: 10px 16px; gap: 10px; border-top: 1px solid var(--border); }
+.rank-pos { font-size: 1rem; font-weight: 900; width: 28px; flex-shrink: 0; }
+.rank-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.rank-name { flex: 1; font-size: 0.9rem; font-weight: 600; }
+.rank-times { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.rank-t { font-family: 'Courier New', monospace; font-size: 0.72rem; color: var(--muted); background: #111; border-radius: 4px; padding: 2px 6px; }
+.rank-t.best { color: var(--green); font-weight: 700; }
+.rank-t.dnf-t { color: var(--red); }
 
-  .name-cell { display: flex; align-items: center; gap: 8px; justify-content: flex-start; }
-  .color-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+#btn-reset { display: block; width: calc(100% - 20px); margin: 0 10px 20px; background: #1a1a1a; color: var(--muted); border: 1px solid var(--border); border-radius: 12px; padding: 14px; font-size: 0.9rem; font-weight: 600; cursor: pointer; text-align: center; }
+#btn-reset:active { background: #222; }
 
-  .time-display {
-    font-family: 'Courier New', monospace;
-    font-size: 1rem; font-weight: bold;
-    color: #4caf50; min-width: 80px; display: inline-block;
-  }
-  .time-display.running { color: #ff9800; animation: pulse 1s infinite; }
-  .time-display.dnf { color: #f44336; }
-  .time-display.pending { color: #555; }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
-
-  .btn-group { display: flex; gap: 5px; justify-content: center; flex-wrap: wrap; }
-  .btn-depart, .btn-arrivee, .btn-tombe {
-    border: none; border-radius: 6px;
-    padding: 6px 12px; font-size: 0.78rem;
-    font-weight: bold; cursor: pointer;
-    text-transform: uppercase; letter-spacing: 0.5px;
-    transition: all 0.15s; white-space: nowrap;
-  }
-  .btn-depart  { background: #2196f3; color: #fff; }
-  .btn-depart:hover  { background: #1976d2; }
-  .btn-arrivee { background: #4caf50; color: #fff; }
-  .btn-arrivee:hover { background: #388e3c; }
-  .btn-tombe   { background: #f44336; color: #fff; }
-  .btn-tombe:hover   { background: #c62828; }
-  .btn-depart:disabled, .btn-arrivee:disabled, .btn-tombe:disabled {
-    opacity: 0.3; cursor: not-allowed;
-  }
-
-  .badge-dnf { background: #f44336; color: #fff; border-radius: 4px; padding: 2px 7px; font-size: 0.75rem; font-weight: bold; }
-  .badge-fin { background: #4caf50; color: #fff; border-radius: 4px; padding: 2px 7px; font-size: 0.75rem; font-weight: bold; }
-
-  #classement {
-    margin-top: 24px; background: #1a1a1a;
-    border: 1px solid #333; border-radius: 12px; padding: 20px;
-  }
-  #classement h2 { color: #ff6600; margin-bottom: 14px; }
-  .rank-1 td { color: #ffd700; font-weight: bold; }
-  .rank-2 td { color: #c0c0c0; }
-  .rank-3 td { color: #cd7f32; }
-
-  #btn-reset {
-    display: block; margin: 20px auto 0;
-    background: #333; color: #aaa;
-    border: 1px solid #555; border-radius: 8px;
-    padding: 10px 30px; font-size: 0.9rem;
-    cursor: pointer; transition: background 0.2s;
-  }
-  #btn-reset:hover { background: #444; color: #fff; }
-
-  #toast {
-    position: fixed; bottom: 30px; right: 30px;
-    background: #ff6600; color: #fff;
-    padding: 12px 22px; border-radius: 8px;
-    font-weight: bold; font-size: 0.95rem;
-    opacity: 0; transition: opacity 0.3s;
-    pointer-events: none; z-index: 999;
-  }
-  #toast.show { opacity: 1; }
+#toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(20px); background: #1a1a1a; color: var(--text); border: 1px solid var(--border); padding: 10px 20px; border-radius: 30px; font-size: 0.9rem; font-weight: 600; opacity: 0; transition: opacity 0.2s, transform 0.2s; pointer-events: none; z-index: 999; white-space: nowrap; max-width: 90vw; overflow: hidden; text-overflow: ellipsis; }
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 </style>
 </head>
 <body>
 
-<h1>🏍️ Chrono Motocross</h1>
-
 <!-- SETUP -->
-<div id="setup-panel">
-  <h2>⚙️ Configuration de la session</h2>
-  <div class="setup-grid" id="participants-setup"></div>
-  <div class="mode-row">
-    <label>Mode départ :</label>
-    <select id="mode-select">
-      <option value="auto">Automatique (toutes les X secondes)</option>
-      <option value="manual">Manuel (clic)</option>
-    </select>
-    <label id="interval-label">Intervalle :</label>
-    <input type="number" id="interval-input" value="320" min="1" max="9999" style="width:90px">
-    <label>sec</label>
-    <label>Sprints :</label>
-    <input type="number" id="sprints-input" value="3" min="1" max="10" style="width:60px">
+<div id="setup">
+  <h1>🏍️ Chrono MX</h1>
+  <div class="setup-card">
+    <h2>Participants</h2>
+    <div id="p-list"></div>
   </div>
-  <button id="btn-start-session">🚦 Lancer la session</button>
+  <div class="setup-card">
+    <h2>Options</h2>
+    <div class="options-row">
+      <div class="opt-group">
+        <label>Mode départ</label>
+        <select id="mode-sel">
+          <option value="auto">Auto (timer)</option>
+          <option value="manual">Manuel</option>
+        </select>
+      </div>
+      <div class="opt-group" id="interval-group">
+        <label>Intervalle (sec)</label>
+        <input type="number" id="interval-in" value="320" min="1" max="9999" style="width:90px">
+      </div>
+      <div class="opt-group">
+        <label>Sprints</label>
+        <input type="number" id="sprints-in" value="3" min="1" max="10" style="width:70px">
+      </div>
+    </div>
+  </div>
+  <button id="btn-launch">🚦 Lancer la session</button>
 </div>
 
 <!-- RACE -->
-<div id="race-panel">
+<div id="race">
   <div id="auto-bar">
-    <span class="label">Prochain départ auto dans :</span>
-    <div id="auto-countdown">--</div>
-    <button id="btn-pause-auto">⏸ Pause auto</button>
-    <button id="btn-force-depart">🚀 Forcer départ maintenant</button>
-    <span class="label" id="auto-status"></span>
+    <span id="auto-label">Prochain départ :</span>
+    <span id="auto-count">--</span>
+    <button class="auto-btn" id="btn-pause">⏸ Pause</button>
+    <button class="auto-btn" id="btn-force">🚀 Forcer</button>
   </div>
-
-  <div class="sprint-tabs" id="sprint-tabs"></div>
-
-  <div class="table-wrap">
-    <table id="race-table">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Participant</th>
-          <th id="th-sprint">Sprint</th>
-          <th>Temps</th>
-          <th>Statut</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody id="race-tbody"></tbody>
-    </table>
-  </div>
-
+  <div id="sprint-tabs"></div>
+  <div id="cards"></div>
   <div id="classement">
-    <h2>🏆 Classement général</h2>
-    <div class="table-wrap">
-      <table id="classement-table">
-        <thead><tr id="classement-thead"></tr></thead>
-        <tbody id="classement-tbody"></tbody>
-      </table>
-    </div>
+    <h2>🏆 Classement</h2>
+    <div id="rank-list"></div>
   </div>
-
   <button id="btn-reset">🔄 Nouvelle session</button>
 </div>
 
 <div id="toast"></div>
 
 <script>
-const DEFAULT_COLORS = [
-  '#e74c3c','#e67e22','#f1c40f','#2ecc71','#1abc9c',
-  '#3498db','#9b59b6','#e91e63','#00bcd4','#8bc34a'
-];
-
-let config = { participants: [], mode: 'auto', interval: 320, sprints: 3 };
-let sprints = [];
-let currentSprint = 0;
-let tickInterval = null;
-let displayInterval = null;
-let autoRemaining = 0;
+const COLORS = ['#e74c3c','#e67e22','#f1c40f','#2ecc71','#1abc9c','#3498db','#9b59b6','#e91e63','#00bcd4','#8bc34a'];
+let cfg = { participants:[], mode:'auto', interval:320, sprints:3 };
+let data = [];
+let curSprint = 0;
+let autoSec = 0;
 let autoPaused = false;
+let tickId = null;
+let rafId = null;
 
-// ── SETUP ──
-function buildSetup() {
-  const grid = document.getElementById('participants-setup');
-  grid.innerHTML = '';
+// ── SETUP BUILD ──
+(function() {
+  const list = document.getElementById('p-list');
   for (let i = 0; i < 10; i++) {
-    const div = document.createElement('div');
-    div.className = 'participant-setup';
-    div.innerHTML = `
-      <span class="num">${i+1}</span>
-      <input type="text" id="p-name-${i}" placeholder="Pilote ${i+1}" value="Pilote ${i+1}">
-      <input type="color" id="p-color-${i}" value="${DEFAULT_COLORS[i]}">
-    `;
-    grid.appendChild(div);
+    const row = document.createElement('div');
+    row.className = 'p-row';
+    row.innerHTML = `<span class="p-num">${i+1}</span>
+      <input type="text" id="pn${i}" value="Pilote ${i+1}">
+      <input type="color" id="pc${i}" value="${COLORS[i]}">`;
+    list.appendChild(row);
   }
-  document.getElementById('mode-select').addEventListener('change', e => {
-    const show = e.target.value === 'auto';
-    document.getElementById('interval-label').style.display = show ? '' : 'none';
-    document.getElementById('interval-input').style.display = show ? '' : 'none';
+  document.getElementById('mode-sel').addEventListener('change', e => {
+    document.getElementById('interval-group').style.display = e.target.value === 'auto' ? '' : 'none';
   });
-}
+})();
 
-document.getElementById('btn-start-session').addEventListener('click', () => {
-  config.participants = [];
-  for (let i = 0; i < 10; i++) {
-    config.participants.push({
-      name: document.getElementById(`p-name-${i}`).value.trim() || `Pilote ${i+1}`,
-      color: document.getElementById(`p-color-${i}`).value
-    });
-  }
-  config.mode     = document.getElementById('mode-select').value;
-  config.interval = parseInt(document.getElementById('interval-input').value) || 320;
-  config.sprints  = parseInt(document.getElementById('sprints-input').value) || 3;
+// ── LAUNCH ──
+document.getElementById('btn-launch').addEventListener('click', () => {
+  cfg.participants = Array.from({length:10}, (_,i) => ({
+    name:  document.getElementById(`pn${i}`).value.trim() || `Pilote ${i+1}`,
+    color: document.getElementById(`pc${i}`).value
+  }));
+  cfg.mode     = document.getElementById('mode-sel').value;
+  cfg.interval = parseInt(document.getElementById('interval-in').value) || 320;
+  cfg.sprints  = parseInt(document.getElementById('sprints-in').value) || 3;
 
-  sprints = [];
-  for (let s = 0; s < config.sprints; s++) {
-    sprints.push(config.participants.map(() => ({
-      state: 'pending', start: null, end: null, elapsed: null
-    })));
-  }
-  currentSprint = 0;
+  data = Array.from({length: cfg.sprints}, () =>
+    cfg.participants.map(() => ({ state:'pending', start:null, elapsed:null }))
+  );
+  curSprint = 0;
 
-  document.getElementById('setup-panel').style.display = 'none';
-  document.getElementById('race-panel').style.display = 'block';
+  document.getElementById('setup').style.display = 'none';
+  document.getElementById('race').style.display = 'block';
 
-  buildSprintTabs();
-  renderRaceRows();
-  updateClassementHeaders();
-  buildClassement();
+  buildTabs();
+  renderCards();
+  renderRank();
 
-  if (config.mode === 'auto') {
+  if (cfg.mode === 'auto') {
     document.getElementById('auto-bar').style.display = 'flex';
-    startAutoTimer();
+    startAuto();
   } else {
     document.getElementById('auto-bar').style.display = 'none';
   }
-
-  displayInterval = setInterval(refreshTimeDisplays, 100);
+  startRAF();
 });
 
-// ── SPRINT TABS ──
-function buildSprintTabs() {
-  const tabs = document.getElementById('sprint-tabs');
-  tabs.innerHTML = '';
-  for (let s = 0; s < config.sprints; s++) {
-    const btn = document.createElement('button');
-    btn.className = 'sprint-tab' + (s === 0 ? ' active' : '');
-    btn.textContent = `Sprint ${s+1}`;
-    btn.dataset.sprint = s;
-    btn.addEventListener('click', () => switchSprint(s));
-    tabs.appendChild(btn);
+// ── TABS ──
+function buildTabs() {
+  const el = document.getElementById('sprint-tabs');
+  el.innerHTML = '';
+  for (let s = 0; s < cfg.sprints; s++) {
+    const b = document.createElement('button');
+    b.className = 's-tab' + (s===0?' active':'');
+    b.textContent = `Sprint ${s+1}`;
+    b.addEventListener('click', () => switchSprint(s));
+    el.appendChild(b);
   }
 }
-
-function switchSprint(idx) {
-  currentSprint = idx;
-  document.querySelectorAll('.sprint-tab').forEach((t, i) => t.classList.toggle('active', i === idx));
-  document.getElementById('th-sprint').textContent = `Sprint ${idx+1}`;
-  renderRaceRows();
-  buildClassement();
+function switchSprint(s) {
+  curSprint = s;
+  document.querySelectorAll('.s-tab').forEach((t,i) => t.classList.toggle('active', i===s));
+  renderCards();
+  renderRank();
 }
 
-// ── RACE TABLE ──
-function renderRaceRows() {
-  const tbody = document.getElementById('race-tbody');
-  tbody.innerHTML = '';
-  config.participants.forEach((p, i) => {
-    const entry = sprints[currentSprint][i];
-    const tr = document.createElement('tr');
-    tr.id = `row-${i}`;
-    if (entry.state === 'dnf')     tr.classList.add('disqualified');
-    if (entry.state === 'running') tr.classList.add('running');
+// ── RENDER CARDS (full, on switch/launch) ──
+function renderCards() {
+  const el = document.getElementById('cards');
+  el.innerHTML = '';
+  cfg.participants.forEach((p, i) => {
+    const e = data[curSprint][i];
+    const card = document.createElement('div');
+    card.className = 'p-card' + (e.state==='running'?' running':e.state==='dnf'?' dnf':'');
+    card.id = `card-${i}`;
+    const canD = e.state==='pending';
+    const canA = e.state==='running';
+    const canT = e.state==='running'||e.state==='pending';
+    card.innerHTML = `
+      <div class="card-top">
+        <span class="card-num">${i+1}</span>
+        <div class="card-dot" style="background:${p.color}"></div>
+        <span class="card-name">${p.name}</span>
+        <span class="card-time ${e.state==='running'?'running':e.state==='done'?'done':e.state==='dnf'?'dnf-t':''}" id="ct-${i}">${getTimeStr(e)}</span>
+      </div>
+      <div class="card-btns">
+        <button class="c-btn depart"  id="cd-${i}" ${canD?'':'disabled'}>
+          <span class="icon">🚦</span>Départ
+        </button>
+        <button class="c-btn arrivee" id="ca-${i}" ${canA?'':'disabled'}>
+          <span class="icon">🏁</span>Arrivée
+        </button>
+        <button class="c-btn tombe"   id="cb-${i}" ${canT?'':'disabled'}>
+          <span class="icon">💥</span>Tombé
+        </button>
+      </div>`;
+    el.appendChild(card);
 
-    let timeStr = '--:--:--', timeClass = 'pending';
-    if (entry.state === 'running') { timeStr = formatTime(Date.now() - entry.start); timeClass = 'running'; }
-    else if (entry.state === 'done') { timeStr = formatTime(entry.elapsed); timeClass = ''; }
-    else if (entry.state === 'dnf')  { timeStr = 'DNF'; timeClass = 'dnf'; }
-
-    let statusHtml = '';
-    if      (entry.state === 'dnf')     statusHtml = '<span class="badge-dnf">DNF</span>';
-    else if (entry.state === 'done')    statusHtml = '<span class="badge-fin">✓ Fini</span>';
-    else if (entry.state === 'running') statusHtml = '🏍️ En course';
-    else                                statusHtml = '⏳ Attente';
-
-    const canDepart  = entry.state === 'pending';
-    const canArrivee = entry.state === 'running';
-    const canTombe   = entry.state === 'running' || entry.state === 'pending';
-    const isDnf      = entry.state === 'dnf';
-
-    tr.innerHTML = `
-      <td>${i+1}</td>
-      <td><div class="name-cell"><div class="color-dot" style="background:${p.color}"></div>${p.name}</div></td>
-      <td>Sprint ${currentSprint+1}</td>
-      <td><span class="time-display ${timeClass}" id="time-${i}">${timeStr}</span></td>
-      <td id="status-${i}">${statusHtml}</td>
-      <td>
-        <div class="btn-group">
-          <button class="btn-depart"  ${canDepart&&!isDnf?'':'disabled'} onclick="actionDepart(${i})">🚦 Départ</button>
-          <button class="btn-arrivee" ${canArrivee?'':'disabled'}        onclick="actionArrivee(${i})">🏁 Arrivée</button>
-          <button class="btn-tombe"   ${canTombe&&!isDnf?'':'disabled'}  onclick="actionTombe(${i})">💥 Tombé</button>
-        </div>
-      </td>
-    `;
-    tbody.appendChild(tr);
+    // Attach events — touchend for mobile speed, click fallback
+    attachBtn(`cd-${i}`, i, 'd');
+    attachBtn(`ca-${i}`, i, 'a');
+    attachBtn(`cb-${i}`, i, 't');
   });
+}
+
+// ── BUTTON EVENTS (no double-fire) ──
+function attachBtn(id, i, type) {
+  const btn = document.getElementById(id);
+  if (!btn) return;
+  let lastFire = 0;
+  const fire = (ev) => {
+    ev.preventDefault();
+    const now = Date.now();
+    if (now - lastFire < 300) return;
+    lastFire = now;
+    act(i, type);
+  };
+  btn.addEventListener('touchend', fire, { passive: false });
+  btn.addEventListener('click', fire);
 }
 
 // ── ACTIONS ──
-function actionDepart(i) {
-  const e = sprints[currentSprint][i];
-  if (e.state !== 'pending') return;
-  e.state = 'running'; e.start = Date.now();
-  showToast(`🚦 ${config.participants[i].name} — Départ !`);
-  renderRaceRows(); buildClassement();
-}
-function actionArrivee(i) {
-  const e = sprints[currentSprint][i];
-  if (e.state !== 'running') return;
-  e.end = Date.now(); e.elapsed = e.end - e.start; e.state = 'done';
-  showToast(`🏁 ${config.participants[i].name} — ${formatTime(e.elapsed)}`);
-  renderRaceRows(); buildClassement();
-}
-function actionTombe(i) {
-  const e = sprints[currentSprint][i];
-  if (e.state === 'dnf') return;
-  if (e.state === 'running') { e.end = Date.now(); e.elapsed = e.end - e.start; }
-  e.state = 'dnf';
-  showToast(`💥 ${config.participants[i].name} — Disqualifié (DNF)`);
-  renderRaceRows(); buildClassement();
+function act(i, type) {
+  const e = data[curSprint][i];
+  if (type === 'd') {
+    if (e.state !== 'pending') return;
+    e.state = 'running';
+    e.start = performance.now();
+    // Reset auto timer on depart
+    if (cfg.mode === 'auto') { autoSec = cfg.interval; updateAutoDisplay(); }
+    toast(`🚦 ${cfg.participants[i].name} — Départ !`);
+  } else if (type === 'a') {
+    if (e.state !== 'running') return;
+    e.elapsed = performance.now() - e.start;
+    e.state = 'done';
+    toast(`🏁 ${cfg.participants[i].name} — ${fmt(e.elapsed)}`);
+  } else if (type === 't') {
+    if (e.state === 'dnf') return;
+    if (e.state === 'running') e.elapsed = performance.now() - e.start;
+    e.state = 'dnf';
+    toast(`💥 ${cfg.participants[i].name} — DNF`);
+  }
+  updateCard(i);
+  renderRank();
 }
 
-// ── LIVE REFRESH ──
-function refreshTimeDisplays() {
-  sprints[currentSprint].forEach((entry, i) => {
-    if (entry.state !== 'running') return;
-    const el = document.getElementById(`time-${i}`);
-    if (el) el.textContent = formatTime(Date.now() - entry.start);
-  });
+// ── SURGICAL CARD UPDATE (no full re-render) ──
+function updateCard(i) {
+  const e = data[curSprint][i];
+  const card = document.getElementById(`card-${i}`);
+  if (!card) return;
+  card.className = 'p-card' + (e.state==='running'?' running':e.state==='dnf'?' dnf':'');
+  const ct = document.getElementById(`ct-${i}`);
+  if (ct) {
+    ct.className = 'card-time ' + (e.state==='running'?'running':e.state==='done'?'done':e.state==='dnf'?'dnf-t':'');
+    if (e.state !== 'running') ct.textContent = getTimeStr(e);
+  }
+  const canD = e.state==='pending';
+  const canA = e.state==='running';
+  const canT = e.state==='running'||e.state==='pending';
+  const bd = document.getElementById(`cd-${i}`);
+  const ba = document.getElementById(`ca-${i}`);
+  const bt = document.getElementById(`cb-${i}`);
+  if (bd) bd.disabled = !canD;
+  if (ba) ba.disabled = !canA;
+  if (bt) bt.disabled = !canT;
+}
+
+// ── RAF LOOP (live chrono, zero latency) ──
+function startRAF() {
+  cancelAnimationFrame(rafId);
+  function loop() {
+    const now = performance.now();
+    data[curSprint].forEach((e, i) => {
+      if (e.state !== 'running') return;
+      const el = document.getElementById(`ct-${i}`);
+      if (el) el.textContent = fmt(now - e.start);
+    });
+    rafId = requestAnimationFrame(loop);
+  }
+  rafId = requestAnimationFrame(loop);
 }
 
 // ── AUTO TIMER ──
-function startAutoTimer() {
-  autoRemaining = config.interval;
+function startAuto() {
+  autoSec = cfg.interval;
   autoPaused = false;
   updateAutoDisplay();
-  clearInterval(tickInterval);
-  tickInterval = setInterval(() => {
+  clearInterval(tickId);
+  tickId = setInterval(() => {
     if (autoPaused) return;
-    autoRemaining--;
+    autoSec--;
     updateAutoDisplay();
-    if (autoRemaining <= 0) { triggerAutoDepart(); autoRemaining = config.interval; }
+    if (autoSec <= 0) { fireAutoDepart(); autoSec = cfg.interval; }
   }, 1000);
 }
-function triggerAutoDepart() {
-  const idx = sprints[currentSprint].findIndex(e => e.state === 'pending');
-  if (idx !== -1) actionDepart(idx);
-  else document.getElementById('auto-status').textContent = 'Tous partis !';
+function fireAutoDepart() {
+  const idx = data[curSprint].findIndex(e => e.state === 'pending');
+  if (idx !== -1) act(idx, 'd');
 }
 function updateAutoDisplay() {
-  const el = document.getElementById('auto-countdown');
-  if (autoPaused) { el.textContent = '⏸'; el.style.color = '#888'; return; }
-  el.textContent = autoRemaining + 's';
-  el.style.color = autoRemaining <= 10 ? '#f44336' : '#ff6600';
+  const el = document.getElementById('auto-count');
+  if (!el) return;
+  if (autoPaused) { el.textContent = '⏸'; el.style.color = '#666'; return; }
+  el.textContent = autoSec + 's';
+  el.style.color = autoSec <= 10 ? '#ef4444' : '#ff6600';
 }
-
-document.getElementById('btn-pause-auto').addEventListener('click', function() {
+document.getElementById('btn-pause').addEventListener('click', function() {
   autoPaused = !autoPaused;
-  this.textContent = autoPaused ? '▶ Reprendre auto' : '⏸ Pause auto';
-  this.classList.toggle('active', autoPaused);
+  this.textContent = autoPaused ? '▶ Reprendre' : '⏸ Pause';
+  this.classList.toggle('paused', autoPaused);
   updateAutoDisplay();
 });
-document.getElementById('btn-force-depart').addEventListener('click', () => {
-  autoRemaining = config.interval;
-  triggerAutoDepart();
+document.getElementById('btn-force').addEventListener('click', () => {
+  autoSec = cfg.interval;
+  fireAutoDepart();
   updateAutoDisplay();
 });
 
 // ── CLASSEMENT ──
-function updateClassementHeaders() {
-  const tr = document.getElementById('classement-thead');
-  tr.innerHTML = '<th>Rang</th><th>Participant</th>';
-  for (let s = 0; s < config.sprints; s++) tr.innerHTML += `<th>Sprint ${s+1}</th>`;
-  tr.innerHTML += '<th>Meilleur temps</th>';
-}
-function buildClassement() {
-  const tbody = document.getElementById('classement-tbody');
-  tbody.innerHTML = '';
-  const rows = config.participants.map((p, i) => {
-    const times = sprints.map(s => s[i]);
-    const valid = times.filter(e => e.state === 'done').map(e => e.elapsed);
+function renderRank() {
+  const el = document.getElementById('rank-list');
+  el.innerHTML = '';
+  const rows = cfg.participants.map((p, i) => {
+    const times = data.map(s => s[i]);
+    const valid = times.filter(e => e.state==='done').map(e => e.elapsed);
     return { p, i, times, best: valid.length ? Math.min(...valid) : null };
   });
-  rows.sort((a, b) => {
-    if (a.best !== null && b.best !== null) return a.best - b.best;
-    if (a.best !== null) return -1;
-    if (b.best !== null) return 1;
-    const aDnf = a.times.some(t => t.state === 'dnf');
-    const bDnf = b.times.some(t => t.state === 'dnf');
-    return aDnf === bDnf ? 0 : aDnf ? 1 : -1;
+  rows.sort((a,b) => {
+    if (a.best!==null && b.best!==null) return a.best - b.best;
+    if (a.best!==null) return -1;
+    if (b.best!==null) return 1;
+    return 0;
   });
+  const medals = ['🥇','🥈','🥉'];
   rows.forEach((row, rank) => {
-    const tr = document.createElement('tr');
-    tr.className = ['rank-1','rank-2','rank-3'][rank] || '';
-    let cells = `<td>${rank+1}</td><td><div class="name-cell"><div class="color-dot" style="background:${row.p.color}"></div>${row.p.name}</div></td>`;
-    for (let s = 0; s < config.sprints; s++) {
+    const div = document.createElement('div');
+    div.className = 'rank-row';
+    let timesHtml = '';
+    for (let s = 0; s < cfg.sprints; s++) {
       const e = row.times[s];
-      if      (e.state === 'done')    cells += `<td>${formatTime(e.elapsed)}</td>`;
-      else if (e.state === 'dnf')     cells += `<td><span class="badge-dnf">DNF</span></td>`;
-      else if (e.state === 'running') cells += `<td>🏍️</td>`;
-      else                            cells += `<td>--</td>`;
+      const isBest = e.state==='done' && row.best===e.elapsed;
+      if (e.state==='done')     timesHtml += `<span class="rank-t${isBest?' best':''}" title="Sprint ${s+1}">S${s+1} ${fmt(e.elapsed)}</span>`;
+      else if (e.state==='dnf') timesHtml += `<span class="rank-t dnf-t">S${s+1} DNF</span>`;
+      else                      timesHtml += `<span class="rank-t">S${s+1} --</span>`;
     }
-    cells += `<td>${row.best !== null ? formatTime(row.best) : '--'}</td>`;
-    tr.innerHTML = cells;
-    tbody.appendChild(tr);
+    div.innerHTML = `
+      <span class="rank-pos">${medals[rank]||rank+1}</span>
+      <div class="rank-dot" style="background:${row.p.color}"></div>
+      <span class="rank-name">${row.p.name}</span>
+      <div class="rank-times">${timesHtml}</div>`;
+    el.appendChild(div);
   });
 }
 
 // ── RESET ──
 document.getElementById('btn-reset').addEventListener('click', () => {
-  clearInterval(tickInterval);
-  clearInterval(displayInterval);
-  document.getElementById('race-panel').style.display = 'none';
-  document.getElementById('setup-panel').style.display = 'block';
+  clearInterval(tickId);
+  cancelAnimationFrame(rafId);
+  document.getElementById('race').style.display = 'none';
+  document.getElementById('setup').style.display = 'block';
 });
 
 // ── UTILS ──
-function formatTime(ms) {
-  if (ms == null) return '--:--:--';
-  const min = Math.floor(ms / 60000);
-  const sec = Math.floor((ms % 60000) / 1000);
-  const cs  = Math.floor((ms % 1000) / 10);
-  return `${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')}.${String(cs).padStart(2,'0')}`;
+function fmt(ms) {
+  if (ms == null) return '--:--.--';
+  const m  = Math.floor(ms / 60000);
+  const s  = Math.floor((ms % 60000) / 1000);
+  const cs = Math.floor((ms % 1000) / 10);
+  return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}.${String(cs).padStart(2,'0')}`;
 }
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
+function getTimeStr(e) {
+  if (e.state==='running') return fmt(performance.now() - e.start);
+  if (e.state==='done')    return fmt(e.elapsed);
+  if (e.state==='dnf')     return 'DNF';
+  return '--:--.--';
 }
-
-buildSetup();
+let toastTimer = null;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+}
 </script>
 </body>
 </html>
