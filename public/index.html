@@ -67,7 +67,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .card-time.running { color: var(--green); }
 .card-time.done { color: #fff; }
 .card-time.dnf-t { color: var(--red); }
-.card-btns { display: grid; grid-template-columns: 1fr 1fr 1fr; border-top: 1px solid var(--border); }
+.card-btns { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--border); }
 .c-btn { padding: 16px 8px; border: none; background: transparent; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; color: var(--muted); display: flex; flex-direction: column; align-items: center; gap: 4px; touch-action: manipulation; user-select: none; }
 .c-btn:not(:last-child) { border-right: 1px solid var(--border); }
 .c-btn .icon { font-size: 1.4rem; }
@@ -234,32 +234,28 @@ function renderCards() {
     const card = document.createElement('div');
     card.className = 'p-card' + (e.state==='running'?' running':e.state==='dnf'?' dnf':'');
     card.id = `card-${i}`;
-    const canD = e.state==='pending';
-    const canA = e.state==='running';
     const canT = e.state==='running'||e.state==='pending';
+    const isRunning = e.state==='running';
+    const isDone    = e.state==='done';
+    const isDnf     = e.state==='dnf';
     card.innerHTML = `
       <div class="card-top">
         <span class="card-num">${i+1}</span>
         <div class="card-dot" style="background:${p.color}"></div>
         <span class="card-name">${p.name}</span>
-        <span class="card-time ${e.state==='running'?'running':e.state==='done'?'done':e.state==='dnf'?'dnf-t':''}" id="ct-${i}">${getTimeStr(e)}</span>
+        <span class="card-time ${isRunning?'running':isDone?'done':isDnf?'dnf-t':''}" id="ct-${i}">${getTimeStr(e)}</span>
       </div>
       <div class="card-btns">
-        <button class="c-btn depart"  id="cd-${i}" ${canD?'':'disabled'}>
-          <span class="icon">🚦</span>Départ
+        <button class="c-btn ${isRunning?'arrivee':'depart'}" id="cd-${i}" ${isDone||isDnf?'disabled':''}>
+          <span class="icon">${isRunning?'🏁':'🚦'}</span>${isRunning?'Arrivée':'Départ'}
         </button>
-        <button class="c-btn arrivee" id="ca-${i}" ${canA?'':'disabled'}>
-          <span class="icon">🏁</span>Arrivée
-        </button>
-        <button class="c-btn tombe"   id="cb-${i}" ${canT?'':'disabled'}>
+        <button class="c-btn tombe" id="cb-${i}" ${canT&&!isDnf?'':'disabled'}>
           <span class="icon">💥</span>Tombé
         </button>
       </div>`;
     el.appendChild(card);
 
-    // Attach events — touchend for mobile speed, click fallback
-    attachBtn(`cd-${i}`, i, 'd');
-    attachBtn(`ca-${i}`, i, 'a');
+    attachBtn(`cd-${i}`, i, 'da'); // départ OU arrivée selon état
     attachBtn(`cb-${i}`, i, 't');
   });
 }
@@ -283,6 +279,12 @@ function attachBtn(id, i, type) {
 // ── ACTIONS ──
 function act(i, type) {
   const e = data[curSprint][i];
+  if (type === 'da') {
+    // Même bouton : départ si pending, arrivée si running
+    if (e.state === 'pending') type = 'd';
+    else if (e.state === 'running') type = 'a';
+    else return;
+  }
   if (type === 'd') {
     if (e.state !== 'pending') return;
     e.state = 'running';
@@ -324,15 +326,21 @@ function updateCard(i) {
     ct.className = 'card-time ' + (e.state==='running'?'running':e.state==='done'?'done':e.state==='dnf'?'dnf-t':'');
     if (e.state !== 'running') ct.textContent = getTimeStr(e);
   }
-  const canD = e.state==='pending';
-  const canA = e.state==='running';
+  const isRunning = e.state==='running';
+  const isDone    = e.state==='done';
+  const isDnf     = e.state==='dnf';
   const canT = e.state==='running'||e.state==='pending';
+
+  // Bouton départ/arrivée (même bouton)
   const bd = document.getElementById(`cd-${i}`);
-  const ba = document.getElementById(`ca-${i}`);
+  if (bd) {
+    bd.disabled = isDone || isDnf;
+    bd.className = `c-btn ${isRunning?'arrivee':'depart'}`;
+    bd.innerHTML = `<span class="icon">${isRunning?'🏁':'🚦'}</span>${isRunning?'Arrivée':'Départ'}`;
+  }
+  // Bouton tombé
   const bt = document.getElementById(`cb-${i}`);
-  if (bd) bd.disabled = !canD;
-  if (ba) ba.disabled = !canA;
-  if (bt) bt.disabled = !canT;
+  if (bt) bt.disabled = !canT || isDnf;
 }
 
 // ── RAF LOOP (live chrono, zero latency) ──
