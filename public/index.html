@@ -67,7 +67,11 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .card-time.running { color: var(--green); }
 .card-time.done { color: #fff; }
 .card-time.dnf-t { color: var(--red); }
-.card-btns { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--border); }
+.card-btns { display: grid; grid-template-columns: 1fr 1fr 1fr; border-top: 1px solid var(--border); }
+.c-btn.faute:not(:disabled) { color: #f5c518; }
+.c-btn.faute:active:not(:disabled) { background: #3a2e00; }
+.fault-badge { display: inline-flex; align-items: center; justify-content: center; background: #f5c518; color: #000; border-radius: 50%; width: 20px; height: 20px; font-size: 0.75rem; font-weight: 900; margin-left: 4px; flex-shrink: 0; }
+.fault-badge.zero { background: #333; color: #666; }
 .c-btn { padding: 16px 8px; border: none; background: transparent; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; color: var(--muted); display: flex; flex-direction: column; align-items: center; gap: 4px; touch-action: manipulation; user-select: none; }
 .c-btn:not(:last-child) { border-right: 1px solid var(--border); }
 .c-btn .icon { font-size: 1.4rem; }
@@ -186,7 +190,7 @@ document.getElementById('btn-launch').addEventListener('click', () => {
   cfg.sprints  = parseInt(document.getElementById('sprints-in').value) || 3;
 
   data = Array.from({length: cfg.sprints}, () =>
-    cfg.participants.map(() => ({ state:'pending', start:null, elapsed:null }))
+    cfg.participants.map(() => ({ state:'pending', start:null, elapsed:null, faults:0 }))
   );
   curSprint = 0;
 
@@ -243,11 +247,15 @@ function renderCards() {
         <span class="card-num">${i+1}</span>
         <div class="card-dot" style="background:${p.color}"></div>
         <span class="card-name">${p.name}</span>
+        <span class="fault-badge${e.faults===0?' zero':''}" id="cf-${i}">${e.faults}</span>
         <span class="card-time ${isRunning?'running':isDone?'done':isDnf?'dnf-t':''}" id="ct-${i}">${getTimeStr(e)}</span>
       </div>
       <div class="card-btns">
         <button class="c-btn ${isRunning?'arrivee':'depart'}" id="cd-${i}" ${isDone||isDnf?'disabled':''}>
           <span class="icon">${isRunning?'🏁':'🚦'}</span>${isRunning?'Arrivée':'Départ'}
+        </button>
+        <button class="c-btn faute" id="cj-${i}" ${isDnf?'disabled':''}>
+          <span class="icon">🟨</span>Faute
         </button>
         <button class="c-btn tombe" id="cb-${i}" ${canT&&!isDnf?'':'disabled'}>
           <span class="icon">💥</span>Tombé
@@ -256,6 +264,7 @@ function renderCards() {
     el.appendChild(card);
 
     attachBtn(`cd-${i}`, i, 'da'); // départ OU arrivée selon état
+    attachBtn(`cj-${i}`, i, 'f'); // faute
     attachBtn(`cb-${i}`, i, 't');
   });
 }
@@ -310,6 +319,15 @@ function act(i, type) {
     if (e.state === 'running') e.elapsed = performance.now() - e.start;
     e.state = 'dnf';
     toast(`💥 ${cfg.participants[i].name} — DNF`);
+  } else if (type === 'f') {
+    if (e.state === 'dnf') return;
+    e.faults = (e.faults || 0) + 1;
+    toast(`🟨 ${cfg.participants[i].name} — Faute n°${e.faults}`);
+    // Mise à jour rapide du badge sans re-render complet
+    const fb = document.getElementById(`cf-${i}`);
+    if (fb) { fb.textContent = e.faults; fb.className = 'fault-badge'; }
+    renderRank();
+    return; // pas besoin de updateCard complet
   }
   updateCard(i);
   renderRank();
@@ -341,6 +359,9 @@ function updateCard(i) {
   // Bouton tombé
   const bt = document.getElementById(`cb-${i}`);
   if (bt) bt.disabled = !canT || isDnf;
+  // Bouton faute
+  const bj = document.getElementById(`cj-${i}`);
+  if (bj) bj.disabled = isDnf;
 }
 
 // ── RAF LOOP (live chrono, zero latency) ──
@@ -421,7 +442,8 @@ function renderRank() {
   const rows = cfg.participants.map((p, i) => {
     const times = data.map(s => s[i]);
     const valid = times.filter(e => e.state==='done').map(e => e.elapsed);
-    return { p, i, times, best: valid.length ? Math.min(...valid) : null };
+    const totalFaults = data.reduce((sum, s) => sum + (s[i].faults||0), 0);
+    return { p, i, times, best: valid.length ? Math.min(...valid) : null, totalFaults };
   });
   rows.sort((a,b) => {
     if (a.best!==null && b.best!==null) return a.best - b.best;
@@ -445,7 +467,8 @@ function renderRank() {
       <span class="rank-pos">${medals[rank]||rank+1}</span>
       <div class="rank-dot" style="background:${row.p.color}"></div>
       <span class="rank-name">${row.p.name}</span>
-      <div class="rank-times">${timesHtml}</div>`;
+      <div class="rank-times">${timesHtml}</div>
+      ${row.totalFaults>0?`<span class="fault-badge" title="Fautes totales">${row.totalFaults}</span>`:''}`;
     el.appendChild(div);
   });
 }
