@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏍️ Chrono Motocross</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #0d0d0d;
+    color: #f0f0f0;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  h1 {
+    text-align: center;
+    font-size: 2rem;
+    color: #ff6600;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    margin-bottom: 20px;
+    text-shadow: 0 0 20px #ff6600aa;
+  }
+
+  /* ── SETUP ── */
+  #setup-panel {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 24px;
+  }
+  #setup-panel h2 { color: #ff6600; margin-bottom: 14px; font-size: 1.1rem; }
+  .setup-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .participant-setup {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #222;
+    border-radius: 8px;
+    padding: 8px 12px;
+    border: 1px solid #333;
+  }
+  .participant-setup .num { font-weight: bold; color: #ff6600; width: 22px; flex-shrink: 0; }
+  .participant-setup input[type="text"] {
+    flex: 1;
+    background: #111;
+    border: 1px solid #444;
+    border-radius: 6px;
+    color: #fff;
+    padding: 6px 10px;
+    font-size: 0.9rem;
+  }
+  .participant-setup input[type="color"] {
+    width: 36px; height: 32px;
+    border: none; border-radius: 6px;
+    cursor: pointer; background: none; padding: 0;
+  }
+  .mode-row {
+    display: flex; align-items: center; gap: 16px;
+    flex-wrap: wrap; margin-bottom: 14px;
+  }
+  .mode-row label { color: #aaa; font-size: 0.9rem; }
+  .mode-row select, .mode-row input[type="number"] {
+    background: #111; border: 1px solid #444;
+    border-radius: 6px; color: #fff;
+    padding: 6px 10px; font-size: 0.9rem;
+  }
+  #btn-start-session {
+    display: block; margin: 0 auto;
+    background: #ff6600; color: #fff;
+    border: none; border-radius: 8px;
+    padding: 12px 40px; font-size: 1.1rem;
+    font-weight: bold; cursor: pointer;
+    text-transform: uppercase; letter-spacing: 2px;
+    transition: background 0.2s;
+  }
+  #btn-start-session:hover { background: #e05500; }
+
+  /* ── RACE ── */
+  #race-panel { display: none; }
+
+  #auto-bar {
+    background: #1a1a1a; border: 1px solid #333;
+    border-radius: 10px; padding: 14px 20px;
+    margin-bottom: 20px;
+    display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+  }
+  #auto-bar .label { color: #aaa; font-size: 0.9rem; }
+  #auto-countdown {
+    font-size: 2rem; font-weight: bold;
+    color: #ff6600; min-width: 80px; text-align: center;
+  }
+  #auto-bar button {
+    background: #333; color: #fff;
+    border: 1px solid #555; border-radius: 6px;
+    padding: 8px 18px; cursor: pointer;
+    font-size: 0.85rem; transition: background 0.2s;
+  }
+  #auto-bar button:hover { background: #444; }
+  #auto-bar button.active { background: #ff6600; border-color: #ff6600; }
+
+  .sprint-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+  .sprint-tab {
+    background: #222; border: 1px solid #444;
+    border-radius: 8px 8px 0 0;
+    padding: 8px 24px; cursor: pointer;
+    color: #aaa; font-weight: bold; transition: all 0.2s;
+  }
+  .sprint-tab.active { background: #ff6600; border-color: #ff6600; color: #fff; }
+
+  .table-wrap { overflow-x: auto; border-radius: 0 10px 10px 10px; border: 1px solid #333; }
+  table { width: 100%; border-collapse: collapse; background: #1a1a1a; min-width: 700px; }
+  thead tr { background: #222; }
+  th {
+    padding: 12px 10px; text-align: center;
+    font-size: 0.8rem; text-transform: uppercase;
+    letter-spacing: 1px; color: #888;
+    border-bottom: 2px solid #333;
+  }
+  td {
+    padding: 10px; text-align: center;
+    border-bottom: 1px solid #2a2a2a;
+    font-size: 0.9rem; vertical-align: middle;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr.disqualified td { opacity: 0.4; text-decoration: line-through; }
+  tr.running td { background: #1f2a1a; }
+
+  .name-cell { display: flex; align-items: center; gap: 8px; justify-content: flex-start; }
+  .color-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+
+  .time-display {
+    font-family: 'Courier New', monospace;
+    font-size: 1rem; font-weight: bold;
+    color: #4caf50; min-width: 80px; display: inline-block;
+  }
+  .time-display.running { color: #ff9800; animation: pulse 1s infinite; }
+  .time-display.dnf { color: #f44336; }
+  .time-display.pending { color: #555; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+  .btn-group { display: flex; gap: 5px; justify-content: center; flex-wrap: wrap; }
+  .btn-depart, .btn-arrivee, .btn-tombe {
+    border: none; border-radius: 6px;
+    padding: 6px 12px; font-size: 0.78rem;
+    font-weight: bold; cursor: pointer;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    transition: all 0.15s; white-space: nowrap;
+  }
+  .btn-depart  { background: #2196f3; color: #fff; }
+  .btn-depart:hover  { background: #1976d2; }
+  .btn-arrivee { background: #4caf50; color: #fff; }
+  .btn-arrivee:hover { background: #388e3c; }
+  .btn-tombe   { background: #f44336; color: #fff; }
+  .btn-tombe:hover   { background: #c62828; }
+  .btn-depart:disabled, .btn-arrivee:disabled, .btn-tombe:disabled {
+    opacity: 0.3; cursor: not-allowed;
+  }
+
+  .badge-dnf { background: #f44336; color: #fff; border-radius: 4px; padding: 2px 7px; font-size: 0.75rem; font-weight: bold; }
+  .badge-fin { background: #4caf50; color: #fff; border-radius: 4px; padding: 2px 7px; font-size: 0.75rem; font-weight: bold; }
+
+  #classement {
+    margin-top: 24px; background: #1a1a1a;
+    border: 1px solid #333; border-radius: 12px; padding: 20px;
+  }
+  #classement h2 { color: #ff6600; margin-bottom: 14px; }
+  .rank-1 td { color: #ffd700; font-weight: bold; }
+  .rank-2 td { color: #c0c0c0; }
+  .rank-3 td { color: #cd7f32; }
+
+  #btn-reset {
+    display: block; margin: 20px auto 0;
+    background: #333; color: #aaa;
+    border: 1px solid #555; border-radius: 8px;
+    padding: 10px 30px; font-size: 0.9rem;
+    cursor: pointer; transition: background 0.2s;
+  }
+  #btn-reset:hover { background: #444; color: #fff; }
+
+  #toast {
+    position: fixed; bottom: 30px; right: 30px;
+    background: #ff6600; color: #fff;
+    padding: 12px 22px; border-radius: 8px;
+    font-weight: bold; font-size: 0.95rem;
+    opacity: 0; transition: opacity 0.3s;
+    pointer-events: none; z-index: 999;
+  }
+  #toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<h1>🏍️ Chrono Motocross</h1>
+
+<!-- SETUP -->
+<div id="setup-panel">
+  <h2>⚙️ Configuration de la session</h2>
+  <div class="setup-grid" id="participants-setup"></div>
+  <div class="mode-row">
+    <label>Mode départ :</label>
+    <select id="mode-select">
+      <option value="auto">Automatique (toutes les X secondes)</option>
+      <option value="manual">Manuel (clic)</option>
+    </select>
+    <label id="interval-label">Intervalle :</label>
+    <input type="number" id="interval-input" value="320" min="1" max="9999" style="width:90px">
+    <label>sec</label>
+    <label>Sprints :</label>
+    <input type="number" id="sprints-input" value="3" min="1" max="10" style="width:60px">
+  </div>
+  <button id="btn-start-session">🚦 Lancer la session</button>
+</div>
+
+<!-- RACE -->
+<div id="race-panel">
+  <div id="auto-bar">
+    <span class="label">Prochain départ auto dans :</span>
+    <div id="auto-countdown">--</div>
+    <button id="btn-pause-auto">⏸ Pause auto</button>
+    <button id="btn-force-depart">🚀 Forcer départ maintenant</button>
+    <span class="label" id="auto-status"></span>
+  </div>
+
+  <div class="sprint-tabs" id="sprint-tabs"></div>
+
+  <div class="table-wrap">
+    <table id="race-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Participant</th>
+          <th id="th-sprint">Sprint</th>
+          <th>Temps</th>
+          <th>Statut</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="race-tbody"></tbody>
+    </table>
+  </div>
+
+  <div id="classement">
+    <h2>🏆 Classement général</h2>
+    <div class="table-wrap">
+      <table id="classement-table">
+        <thead><tr id="classement-thead"></tr></thead>
+        <tbody id="classement-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <button id="btn-reset">🔄 Nouvelle session</button>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const DEFAULT_COLORS = [
+  '#e74c3c','#e67e22','#f1c40f','#2ecc71','#1abc9c',
+  '#3498db','#9b59b6','#e91e63','#00bcd4','#8bc34a'
+];
+
+let config = { participants: [], mode: 'auto', interval: 320, sprints: 3 };
+let sprints = [];
+let currentSprint = 0;
+let tickInterval = null;
+let displayInterval = null;
+let autoRemaining = 0;
+let autoPaused = false;
+
+// ── SETUP ──
+function buildSetup() {
+  const grid = document.getElementById('participants-setup');
+  grid.innerHTML = '';
+  for (let i = 0; i < 10; i++) {
+    const div = document.createElement('div');
+    div.className = 'participant-setup';
+    div.innerHTML = `
+      <span class="num">${i+1}</span>
+      <input type="text" id="p-name-${i}" placeholder="Pilote ${i+1}" value="Pilote ${i+1}">
+      <input type="color" id="p-color-${i}" value="${DEFAULT_COLORS[i]}">
+    `;
+    grid.appendChild(div);
+  }
+  document.getElementById('mode-select').addEventListener('change', e => {
+    const show = e.target.value === 'auto';
+    document.getElementById('interval-label').style.display = show ? '' : 'none';
+    document.getElementById('interval-input').style.display = show ? '' : 'none';
+  });
+}
+
+document.getElementById('btn-start-session').addEventListener('click', () => {
+  config.participants = [];
+  for (let i = 0; i < 10; i++) {
+    config.participants.push({
+      name: document.getElementById(`p-name-${i}`).value.trim() || `Pilote ${i+1}`,
+      color: document.getElementById(`p-color-${i}`).value
+    });
+  }
+  config.mode     = document.getElementById('mode-select').value;
+  config.interval = parseInt(document.getElementById('interval-input').value) || 320;
+  config.sprints  = parseInt(document.getElementById('sprints-input').value) || 3;
+
+  sprints = [];
+  for (let s = 0; s < config.sprints; s++) {
+    sprints.push(config.participants.map(() => ({
+      state: 'pending', start: null, end: null, elapsed: null
+    })));
+  }
+  currentSprint = 0;
+
+  document.getElementById('setup-panel').style.display = 'none';
+  document.getElementById('race-panel').style.display = 'block';
+
+  buildSprintTabs();
+  renderRaceRows();
+  updateClassementHeaders();
+  buildClassement();
+
+  if (config.mode === 'auto') {
+    document.getElementById('auto-bar').style.display = 'flex';
+    startAutoTimer();
+  } else {
+    document.getElementById('auto-bar').style.display = 'none';
+  }
+
+  displayInterval = setInterval(refreshTimeDisplays, 100);
+});
+
+// ── SPRINT TABS ──
+function buildSprintTabs() {
+  const tabs = document.getElementById('sprint-tabs');
+  tabs.innerHTML = '';
+  for (let s = 0; s < config.sprints; s++) {
+    const btn = document.createElement('button');
+    btn.className = 'sprint-tab' + (s === 0 ? ' active' : '');
+    btn.textContent = `Sprint ${s+1}`;
+    btn.dataset.sprint = s;
+    btn.addEventListener('click', () => switchSprint(s));
+    tabs.appendChild(btn);
+  }
+}
+
+function switchSprint(idx) {
+  currentSprint = idx;
+  document.querySelectorAll('.sprint-tab').forEach((t, i) => t.classList.toggle('active', i === idx));
+  document.getElementById('th-sprint').textContent = `Sprint ${idx+1}`;
+  renderRaceRows();
+  buildClassement();
+}
+
+// ── RACE TABLE ──
+function renderRaceRows() {
+  const tbody = document.getElementById('race-tbody');
+  tbody.innerHTML = '';
+  config.participants.forEach((p, i) => {
+    const entry = sprints[currentSprint][i];
+    const tr = document.createElement('tr');
+    tr.id = `row-${i}`;
+    if (entry.state === 'dnf')     tr.classList.add('disqualified');
+    if (entry.state === 'running') tr.classList.add('running');
+
+    let timeStr = '--:--:--', timeClass = 'pending';
+    if (entry.state === 'running') { timeStr = formatTime(Date.now() - entry.start); timeClass = 'running'; }
+    else if (entry.state === 'done') { timeStr = formatTime(entry.elapsed); timeClass = ''; }
+    else if (entry.state === 'dnf')  { timeStr = 'DNF'; timeClass = 'dnf'; }
+
+    let statusHtml = '';
+    if      (entry.state === 'dnf')     statusHtml = '<span class="badge-dnf">DNF</span>';
+    else if (entry.state === 'done')    statusHtml = '<span class="badge-fin">✓ Fini</span>';
+    else if (entry.state === 'running') statusHtml = '🏍️ En course';
+    else                                statusHtml = '⏳ Attente';
+
+    const canDepart  = entry.state === 'pending';
+    const canArrivee = entry.state === 'running';
+    const canTombe   = entry.state === 'running' || entry.state === 'pending';
+    const isDnf      = entry.state === 'dnf';
+
+    tr.innerHTML = `
+      <td>${i+1}</td>
+      <td><div class="name-cell"><div class="color-dot" style="background:${p.color}"></div>${p.name}</div></td>
+      <td>Sprint ${currentSprint+1}</td>
+      <td><span class="time-display ${timeClass}" id="time-${i}">${timeStr}</span></td>
+      <td id="status-${i}">${statusHtml}</td>
+      <td>
+        <div class="btn-group">
+          <button class="btn-depart"  ${canDepart&&!isDnf?'':'disabled'} onclick="actionDepart(${i})">🚦 Départ</button>
+          <button class="btn-arrivee" ${canArrivee?'':'disabled'}        onclick="actionArrivee(${i})">🏁 Arrivée</button>
+          <button class="btn-tombe"   ${canTombe&&!isDnf?'':'disabled'}  onclick="actionTombe(${i})">💥 Tombé</button>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// ── ACTIONS ──
+function actionDepart(i) {
+  const e = sprints[currentSprint][i];
+  if (e.state !== 'pending') return;
+  e.state = 'running'; e.start = Date.now();
+  showToast(`🚦 ${config.participants[i].name} — Départ !`);
+  renderRaceRows(); buildClassement();
+}
+function actionArrivee(i) {
+  const e = sprints[currentSprint][i];
+  if (e.state !== 'running') return;
+  e.end = Date.now(); e.elapsed = e.end - e.start; e.state = 'done';
+  showToast(`🏁 ${config.participants[i].name} — ${formatTime(e.elapsed)}`);
+  renderRaceRows(); buildClassement();
+}
+function actionTombe(i) {
+  const e = sprints[currentSprint][i];
+  if (e.state === 'dnf') return;
+  if (e.state === 'running') { e.end = Date.now(); e.elapsed = e.end - e.start; }
+  e.state = 'dnf';
+  showToast(`💥 ${config.participants[i].name} — Disqualifié (DNF)`);
+  renderRaceRows(); buildClassement();
+}
+
+// ── LIVE REFRESH ──
+function refreshTimeDisplays() {
+  sprints[currentSprint].forEach((entry, i) => {
+    if (entry.state !== 'running') return;
+    const el = document.getElementById(`time-${i}`);
+    if (el) el.textContent = formatTime(Date.now() - entry.start);
+  });
+}
+
+// ── AUTO TIMER ──
+function startAutoTimer() {
+  autoRemaining = config.interval;
+  autoPaused = false;
+  updateAutoDisplay();
+  clearInterval(tickInterval);
+  tickInterval = setInterval(() => {
+    if (autoPaused) return;
+    autoRemaining--;
+    updateAutoDisplay();
+    if (autoRemaining <= 0) { triggerAutoDepart(); autoRemaining = config.interval; }
+  }, 1000);
+}
+function triggerAutoDepart() {
+  const idx = sprints[currentSprint].findIndex(e => e.state === 'pending');
+  if (idx !== -1) actionDepart(idx);
+  else document.getElementById('auto-status').textContent = 'Tous partis !';
+}
+function updateAutoDisplay() {
+  const el = document.getElementById('auto-countdown');
+  if (autoPaused) { el.textContent = '⏸'; el.style.color = '#888'; return; }
+  el.textContent = autoRemaining + 's';
+  el.style.color = autoRemaining <= 10 ? '#f44336' : '#ff6600';
+}
+
+document.getElementById('btn-pause-auto').addEventListener('click', function() {
+  autoPaused = !autoPaused;
+  this.textContent = autoPaused ? '▶ Reprendre auto' : '⏸ Pause auto';
+  this.classList.toggle('active', autoPaused);
+  updateAutoDisplay();
+});
+document.getElementById('btn-force-depart').addEventListener('click', () => {
+  autoRemaining = config.interval;
+  triggerAutoDepart();
+  updateAutoDisplay();
+});
+
+// ── CLASSEMENT ──
+function updateClassementHeaders() {
+  const tr = document.getElementById('classement-thead');
+  tr.innerHTML = '<th>Rang</th><th>Participant</th>';
+  for (let s = 0; s < config.sprints; s++) tr.innerHTML += `<th>Sprint ${s+1}</th>`;
+  tr.innerHTML += '<th>Meilleur temps</th>';
+}
+function buildClassement() {
+  const tbody = document.getElementById('classement-tbody');
+  tbody.innerHTML = '';
+  const rows = config.participants.map((p, i) => {
+    const times = sprints.map(s => s[i]);
+    const valid = times.filter(e => e.state === 'done').map(e => e.elapsed);
+    return { p, i, times, best: valid.length ? Math.min(...valid) : null };
+  });
+  rows.sort((a, b) => {
+    if (a.best !== null && b.best !== null) return a.best - b.best;
+    if (a.best !== null) return -1;
+    if (b.best !== null) return 1;
+    const aDnf = a.times.some(t => t.state === 'dnf');
+    const bDnf = b.times.some(t => t.state === 'dnf');
+    return aDnf === bDnf ? 0 : aDnf ? 1 : -1;
+  });
+  rows.forEach((row, rank) => {
+    const tr = document.createElement('tr');
+    tr.className = ['rank-1','rank-2','rank-3'][rank] || '';
+    let cells = `<td>${rank+1}</td><td><div class="name-cell"><div class="color-dot" style="background:${row.p.color}"></div>${row.p.name}</div></td>`;
+    for (let s = 0; s < config.sprints; s++) {
+      const e = row.times[s];
+      if      (e.state === 'done')    cells += `<td>${formatTime(e.elapsed)}</td>`;
+      else if (e.state === 'dnf')     cells += `<td><span class="badge-dnf">DNF</span></td>`;
+      else if (e.state === 'running') cells += `<td>🏍️</td>`;
+      else                            cells += `<td>--</td>`;
+    }
+    cells += `<td>${row.best !== null ? formatTime(row.best) : '--'}</td>`;
+    tr.innerHTML = cells;
+    tbody.appendChild(tr);
+  });
+}
+
+// ── RESET ──
+document.getElementById('btn-reset').addEventListener('click', () => {
+  clearInterval(tickInterval);
+  clearInterval(displayInterval);
+  document.getElementById('race-panel').style.display = 'none';
+  document.getElementById('setup-panel').style.display = 'block';
+});
+
+// ── UTILS ──
+function formatTime(ms) {
+  if (ms == null) return '--:--:--';
+  const min = Math.floor(ms / 60000);
+  const sec = Math.floor((ms % 60000) / 1000);
+  const cs  = Math.floor((ms % 1000) / 10);
+  return `${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')}.${String(cs).padStart(2,'0')}`;
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+buildSetup();
+</script>
+</body>
+</html>
