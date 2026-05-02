@@ -287,8 +287,16 @@ function act(i, type) {
     if (e.state !== 'pending') return;
     e.state = 'running';
     e.start = performance.now();
-    // Reset auto timer on depart
-    if (cfg.mode === 'auto') { autoSec = cfg.interval; updateAutoDisplay(); }
+    if (cfg.mode === 'auto') {
+      if (!autoStarted) {
+        // 1er départ : lance le timer pour la première fois
+        launchAutoTimer();
+      } else {
+        // Départs suivants : reset le compteur
+        autoSec = cfg.interval;
+        updateAutoDisplay();
+      }
+    }
     toast(`🚦 ${cfg.participants[i].name} — Départ !`);
   } else if (type === 'a') {
     if (e.state !== 'running') return;
@@ -343,9 +351,26 @@ function startRAF() {
 }
 
 // ── AUTO TIMER ──
+let autoStarted = false; // timer ne tourne pas avant le 1er départ
+
 function startAuto() {
+  autoStarted = false;
+  autoPaused = false;
+  clearInterval(tickId);
+  // Affiche "En attente..." jusqu'au 1er départ
+  const el = document.getElementById('auto-count');
+  if (el) { el.textContent = '⏳'; el.style.color = '#666'; }
+  const lbl = document.getElementById('auto-label');
+  if (lbl) lbl.textContent = 'En attente du 1er départ :';
+}
+
+function launchAutoTimer() {
+  // Appelé au 1er départ manuel du Pilote 1
+  autoStarted = true;
   autoSec = cfg.interval;
   autoPaused = false;
+  const lbl = document.getElementById('auto-label');
+  if (lbl) lbl.textContent = 'Prochain départ :';
   updateAutoDisplay();
   clearInterval(tickId);
   tickId = setInterval(() => {
@@ -355,6 +380,7 @@ function startAuto() {
     if (autoSec <= 0) { fireAutoDepart(); autoSec = cfg.interval; }
   }, 1000);
 }
+
 function fireAutoDepart() {
   const idx = data[curSprint].findIndex(e => e.state === 'pending');
   if (idx !== -1) act(idx, 'd');
@@ -362,6 +388,7 @@ function fireAutoDepart() {
 function updateAutoDisplay() {
   const el = document.getElementById('auto-count');
   if (!el) return;
+  if (!autoStarted) { el.textContent = '⏳'; el.style.color = '#666'; return; }
   if (autoPaused) { el.textContent = '⏸'; el.style.color = '#666'; return; }
   el.textContent = autoSec + 's';
   el.style.color = autoSec <= 10 ? '#ef4444' : '#ff6600';
@@ -373,6 +400,7 @@ document.getElementById('btn-pause').addEventListener('click', function() {
   updateAutoDisplay();
 });
 document.getElementById('btn-force').addEventListener('click', () => {
+  if (!autoStarted) { launchAutoTimer(); return; }
   autoSec = cfg.interval;
   fireAutoDepart();
   updateAutoDisplay();
