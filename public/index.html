@@ -265,6 +265,7 @@ h2{font-size:0.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:1
       <h2 style="padding:0;">🏆 Classement</h2>
       <select id="rank-mode" style="background:#111;border:1px solid var(--border);border-radius:8px;color:var(--text);padding:6px 10px;font-size:.78rem;">
         <option value="best">Meilleur temps</option>
+        <option value="best-pen">Meilleur temps + pénalités</option>
         <option value="cumul">Cumul des temps</option>
         <option value="penalite">Cumul + pénalités</option>
       </select>
@@ -875,6 +876,19 @@ function calcScore(row, mode) {
     return valid.length ? Math.min(...valid) : null;
   }
 
+  if (mode === 'best-pen') {
+    // Meilleur temps d'un sprint + pénalités de CE sprint uniquement
+    let best = null;
+    times.forEach(e => {
+      const faultPen = (e.faults || 0) * pFault;
+      let score = null;
+      if (e.state === 'done')     score = e.elapsed + faultPen;
+      else if (e.state === 'dnf') score = (e.elapsed || 0) + pDnf + faultPen;
+      if (score !== null && (best === null || score < best)) best = score;
+    });
+    return best;
+  }
+
   if (mode === 'cumul') {
     const valid = times.filter(e => e.state==='done').map(e => e.elapsed);
     return valid.length ? valid.reduce((a,b) => a+b, 0) : null;
@@ -937,7 +951,7 @@ function renderRank() {
     for (let s = 0; s < cfg.sprints; s++) {
       const e = row.times[s];
       let pen = 0;
-      if (mode === 'penalite') {
+      if (mode === 'penalite' || mode === 'best-pen') {
         pen += (e.faults||0) * pFault;
         if (e.state === 'dnf') pen += pDnf;
       }
@@ -973,7 +987,7 @@ function renderRank() {
   // Afficher les pénalités configurées
   const penInfoEl = document.getElementById('rank-pen-info');
   if (penInfoEl) {
-    if (mode === 'penalite') {
+    if (mode === 'penalite' || mode === 'best-pen') {
       penInfoEl.textContent = `🟨 +${cfg.penaltyFault||0}s/faute  💥 +${cfg.penaltyDnf||0}s/DNF`;
       penInfoEl.style.display = 'block';
     } else {
