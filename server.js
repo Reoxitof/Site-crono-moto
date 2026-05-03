@@ -83,6 +83,10 @@ app.post('/api/session/create', (req, res) => {
   sessions[adminCode] = session;
   sessions[viewCode]  = session;
 
+  // S'assurer que les pénalités ont des valeurs par défaut
+  if (session.config.penaltyFault === undefined) session.config.penaltyFault = 5;
+  if (session.config.penaltyDnf   === undefined) session.config.penaltyDnf   = 30;
+
   setTimeout(() => {
     delete sessions[adminCode];
     delete sessions[viewCode];

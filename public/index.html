@@ -865,40 +865,36 @@ function startRAF() {
 // ══════════════════════════════════════
 function calcScore(row, mode) {
   const cfg = appState.config;
-  const pFault = (cfg.penaltyFault || 0) * 1000; // en ms
-  const pDnf   = (cfg.penaltyDnf   || 0) * 1000;
+  const pFault = ((cfg.penaltyFault !== undefined ? cfg.penaltyFault : 0)) * 1000;
+  const pDnf   = ((cfg.penaltyDnf   !== undefined ? cfg.penaltyDnf   : 0)) * 1000;
 
-  const times = row.times; // par sprint
+  const times = row.times;
 
   if (mode === 'best') {
-    // Meilleur temps brut (sans pénalités)
     const valid = times.filter(e => e.state==='done').map(e => e.elapsed);
     return valid.length ? Math.min(...valid) : null;
   }
 
   if (mode === 'cumul') {
-    // Somme des temps bruts (DNF = non compté)
     const valid = times.filter(e => e.state==='done').map(e => e.elapsed);
     return valid.length ? valid.reduce((a,b) => a+b, 0) : null;
   }
 
   if (mode === 'penalite') {
-    // Somme des temps + pénalités fautes + pénalités DNF
     let total = 0;
     let hasAny = false;
     times.forEach(e => {
+      const faultPen = (e.faults || 0) * pFault;
       if (e.state === 'done') {
-        total += e.elapsed + (e.faults||0) * pFault;
+        total += e.elapsed + faultPen;
         hasAny = true;
       } else if (e.state === 'dnf') {
-        total += (e.elapsed || 0) + pDnf + (e.faults||0) * pFault;
+        total += (e.elapsed || 0) + pDnf + faultPen;
         hasAny = true;
-      }
-    });
-    // Ajouter pénalités fautes sur sprints pending/running aussi
-    times.forEach(e => {
-      if (e.state !== 'done' && e.state !== 'dnf') {
-        total += (e.faults||0) * pFault;
+      } else {
+        // pending/running : compter quand même les fautes
+        total += faultPen;
+        if (faultPen > 0) hasAny = true;
       }
     });
     return hasAny ? total : null;
@@ -914,8 +910,8 @@ function renderRank() {
   const modeEl = document.getElementById('rank-mode');
   const mode = modeEl ? modeEl.value : 'best';
   const cfg = appState.config;
-  const pFault = (cfg.penaltyFault || 0) * 1000;
-  const pDnf   = (cfg.penaltyDnf   || 0) * 1000;
+  const pFault = (cfg.penaltyFault !== undefined ? cfg.penaltyFault : 0) * 1000;
+  const pDnf   = (cfg.penaltyDnf   !== undefined ? cfg.penaltyDnf   : 0) * 1000;
 
   const rows = cfg.participants.map((p, i) => {
     const times = appState.data.map(s => s[i]);
