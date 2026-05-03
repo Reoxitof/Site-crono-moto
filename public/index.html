@@ -135,10 +135,6 @@ h2{font-size:0.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:1
 
   <div class="card">
     <h2>Créer une session</h2>
-    <div class="field">
-      <label>Mot de passe admin</label>
-      <input type="password" id="create-pwd" placeholder="Choisir un mot de passe" autocomplete="new-password">
-    </div>
     <button class="btn btn-orange" id="btn-go-create">⚙️ Configurer la session</button>
   </div>
 
@@ -147,28 +143,17 @@ h2{font-size:0.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:1
   <div class="card">
     <h2>Rejoindre une session</h2>
     <div class="field">
-      <label>Code de session</label>
-      <input type="text" id="join-code" placeholder="Ex: AB3XZ" maxlength="5" style="text-transform:uppercase;letter-spacing:4px;font-size:1.3rem;font-weight:800;">
+      <label>Code admin ou spectateur</label>
+      <input type="text" id="join-code" placeholder="Ex: AB3XZ" maxlength="5"
+        style="text-transform:uppercase;letter-spacing:4px;font-size:1.3rem;font-weight:800;text-align:center;">
     </div>
     <div id="join-error" class="error-msg"></div>
-    <button class="btn btn-dark" id="btn-join">👁️ Rejoindre (spectateur)</button>
-    <button class="btn btn-green" id="btn-join-admin">🔑 Rejoindre (admin)</button>
+    <button class="btn btn-orange" id="btn-join">🚀 Rejoindre</button>
   </div>
 </div>
 
-<!-- ══ SCREEN 2 : ADMIN PASSWORD pour rejoindre ══ -->
-<div id="admin-join-screen" class="screen">
-  <h1>🔑 Accès Admin</h1>
-  <div class="card">
-    <div class="field">
-      <label>Mot de passe de la session</label>
-      <input type="password" id="admin-join-pwd" placeholder="Mot de passe admin" autocomplete="current-password">
-    </div>
-    <div id="admin-join-error" class="error-msg"></div>
-    <button class="btn btn-orange" id="btn-admin-join-confirm">Confirmer</button>
-    <button class="btn btn-dark" id="btn-admin-join-back">← Retour</button>
-  </div>
-</div>
+<!-- SCREEN 2 inutilisé mais gardé pour le routeur -->
+<div id="admin-join-screen" class="screen"></div>
 
 <!-- ══ SCREEN 3 : CONFIG SESSION ══ -->
 <div id="config-screen" class="screen">
@@ -208,11 +193,17 @@ h2{font-size:0.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:1
 <!-- ══ SCREEN 4 : CODE SESSION ══ -->
 <div id="code-screen" class="screen">
   <h1>✅ Session créée</h1>
-  <div class="code-box">
-    <div class="code" id="display-code">-----</div>
-    <div class="hint">Partagez ce code aux spectateurs</div>
+  <div class="code-box" style="margin-bottom:12px;">
+    <div style="font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">🔑 Code Admin (toi)</div>
+    <div class="code" id="display-admin-code">-----</div>
+    <div class="hint">Garde ce code pour toi</div>
   </div>
-  <button class="btn btn-orange" id="btn-enter-race">🏁 Entrer dans la course</button>
+  <div class="code-box">
+    <div style="font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">👁️ Code Spectateur</div>
+    <div class="code" id="display-view-code" style="color:#3b82f6;">-----</div>
+    <div class="hint">Partage ce code aux spectateurs</div>
+  </div>
+  <button class="btn btn-orange" id="btn-enter-race" style="margin-top:4px;">🏁 Entrer dans la course</button>
 </div>
 
 <!-- ══ RACE ══ -->
@@ -222,7 +213,7 @@ h2{font-size:0.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:1
     <span id="auto-count">⏳</span>
     <button class="auto-btn" id="btn-pause">⏸ Pause</button>
     <button class="auto-btn" id="btn-force">🚀 Forcer</button>
-    <div class="session-code-badge">Code : <span id="race-code-badge">-----</span></div>
+    <div class="session-code-badge">Admin: <span id="race-admin-badge" style="color:var(--orange)">--</span> &nbsp;|&nbsp; Spectateur: <span id="race-view-badge" style="color:#3b82f6">--</span></div>
   </div>
   <div id="sprint-tabs"></div>
   <div id="viewer-badge-wrap"></div>
@@ -398,18 +389,18 @@ document.getElementById('btn-go-create').addEventListener('click', () => {
   showScreen('config');
 });
 
-document.getElementById('btn-join').addEventListener('click', () => joinSession(false));
-document.getElementById('btn-join-admin').addEventListener('click', () => {
-  const code = document.getElementById('join-code').value.trim().toUpperCase();
-  if (code.length < 3) { document.getElementById('join-error').textContent = 'Code invalide'; return; }
-  appState.pendingAdminCode = code;
-  document.getElementById('admin-join-error').textContent = '';
-  document.getElementById('admin-join-pwd').value = '';
-  showScreen('admin-join');
+// ══════════════════════════════════════
+// HOME SCREEN
+// ══════════════════════════════════════
+document.getElementById('btn-go-create').addEventListener('click', () => {
+  showScreen('config');
 });
 
-async function joinSession(asAdmin, adminToken = null) {
-  const code = (appState.pendingAdminCode || document.getElementById('join-code').value.trim()).toUpperCase();
+document.getElementById('btn-join').addEventListener('click', () => joinSession());
+
+async function joinSession() {
+  const code = document.getElementById('join-code').value.trim().toUpperCase();
+  if (code.length < 3) { document.getElementById('join-error').textContent = 'Code invalide'; return; }
   document.getElementById('join-error').textContent = '';
   try {
     const res = await fetch('/api/session/join', {
@@ -418,10 +409,11 @@ async function joinSession(asAdmin, adminToken = null) {
     });
     const json = await res.json();
     if (!res.ok) { document.getElementById('join-error').textContent = json.error; return; }
-    appState.sessionCode = json.code;
-    appState.config = json.config;
-    appState.isAdmin = asAdmin;
-    appState.adminToken = adminToken;
+    appState.adminCode  = json.adminCode;
+    appState.viewCode   = json.viewCode;
+    appState.sessionCode = code; // le code entré détermine le rôle
+    appState.isAdmin    = json.isAdmin;
+    appState.config     = json.config;
     connectWS();
   } catch(e) {
     document.getElementById('join-error').textContent = 'Erreur réseau';
@@ -429,34 +421,11 @@ async function joinSession(asAdmin, adminToken = null) {
 }
 
 // ══════════════════════════════════════
-// ADMIN JOIN SCREEN
-// ══════════════════════════════════════
-document.getElementById('btn-admin-join-confirm').addEventListener('click', async () => {
-  const pwd = document.getElementById('admin-join-pwd').value.trim();
-  const code = appState.pendingAdminCode;
-  document.getElementById('admin-join-error').textContent = '';
-  try {
-    const res = await fetch('/api/session/admin', {
-      method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ code, adminPassword: pwd })
-    });
-    const json = await res.json();
-    if (!res.ok) { document.getElementById('admin-join-error').textContent = json.error; return; }
-    appState.adminToken = json.adminToken;
-    await joinSession(true, json.adminToken);
-  } catch(e) {
-    document.getElementById('admin-join-error').textContent = 'Erreur réseau';
-  }
-});
-document.getElementById('btn-admin-join-back').addEventListener('click', () => showScreen('home'));
-
-// ══════════════════════════════════════
 // CONFIG SCREEN
 // ══════════════════════════════════════
 document.getElementById('btn-config-back').addEventListener('click', () => showScreen('home'));
 
 document.getElementById('btn-launch').addEventListener('click', async () => {
-  const pwd = document.getElementById('create-pwd').value.trim();
   const participants = Array.from({length: participantCount}, (_,i) => ({
     name: document.getElementById(`pn${i}`)?.value.trim() || `Pilote ${i+1}`,
     color: document.getElementById(`pc${i}`)?.value || COLORS[i % COLORS.length]
@@ -464,22 +433,25 @@ document.getElementById('btn-launch').addEventListener('click', async () => {
   const config = {
     participants,
     mode: document.getElementById('mode-sel').value,
-    interval: parseInt(document.getElementById('interval-in').value) || 320,
+    interval: parseInt(document.getElementById('interval-in').value) || 20,
     sprints: parseInt(document.getElementById('sprints-in').value) || 3,
     currentSprint: 0
   };
   try {
     const res = await fetch('/api/session/create', {
       method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ config, adminPassword: pwd })
+      body: JSON.stringify({ config, adminPassword: 'internal' })
     });
     const json = await res.json();
     if (!res.ok) { alert(json.error); return; }
-    appState.sessionCode = json.code;
-    appState.adminToken = json.adminToken;
-    appState.isAdmin = true;
-    appState.config = config;
-    document.getElementById('display-code').textContent = json.code;
+    appState.adminCode   = json.adminCode;
+    appState.viewCode    = json.viewCode;
+    appState.sessionCode = json.adminCode; // l'organisateur utilise le code admin
+    appState.adminToken  = json.adminToken;
+    appState.isAdmin     = true;
+    appState.config      = config;
+    document.getElementById('display-admin-code').textContent = json.adminCode;
+    document.getElementById('display-view-code').textContent  = json.viewCode;
     showScreen('code');
   } catch(e) { alert('Erreur réseau'); }
 });
@@ -503,8 +475,7 @@ function connectWS() {
   ws.onopen = () => {
     ws.send(JSON.stringify({
       type: 'join',
-      code: appState.sessionCode,
-      adminToken: appState.adminToken || null
+      code: appState.sessionCode
     }));
   };
 
@@ -516,11 +487,19 @@ function connectWS() {
       if (msg.serverTime) appState.clockOffset = Date.now() - msg.serverTime;
 
       appState.isAdmin = msg.isAdmin !== undefined ? msg.isAdmin : appState.isAdmin;
-      appState.config = msg.config;
-      appState.data = msg.data;
+      appState.config  = msg.config;
+      appState.data    = msg.data;
       appState.autoState = msg.autoState;
+      if (msg.adminCode) appState.adminCode = msg.adminCode;
+      if (msg.viewCode)  appState.viewCode  = msg.viewCode;
       if (appState.screen !== 'race') {
-        document.getElementById('race-code-badge').textContent = appState.sessionCode;
+        document.getElementById('race-admin-badge').textContent = appState.adminCode  || '--';
+        document.getElementById('race-view-badge').textContent  = appState.viewCode   || '--';
+        // Spectateurs ne voient que leur code
+        if (!appState.isAdmin) {
+          document.getElementById('race-admin-badge').closest('.session-code-badge').innerHTML =
+            '👁️ Code : <span style="color:#3b82f6;font-weight:800;">' + appState.sessionCode + '</span>';
+        }
         buildSprintTabs();
         renderCards();
         renderRank();

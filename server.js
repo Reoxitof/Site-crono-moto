@@ -42,7 +42,9 @@ function getPublicState(session) {
     config: session.config,
     data: session.data,
     autoState: session.autoState,
-    serverTime: Date.now()   // pour sync horloge client
+    adminCode: session.adminCode,
+    viewCode: session.viewCode,
+    serverTime: Date.now()
   };
 }
 
@@ -53,16 +55,20 @@ app.post('/api/session/create', (req, res) => {
   const { config, adminPassword } = req.body;
   if (!config || !adminPassword) return res.status(400).json({ error: 'Manque config ou mot de passe' });
 
-  const code = genCode();
+  // Deux codes distincts
+  let adminCode, viewCode;
+  do { adminCode = genCode(); } while (sessions[adminCode]);
+  do { viewCode  = genCode(); } while (sessions[viewCode] || viewCode === adminCode);
+
   const adminToken = uuidv4();
 
-  // Init data
   const data = Array.from({ length: config.sprints }, () =>
     config.participants.map(() => ({ state: 'pending', start: null, elapsed: null, faults: 0 }))
   );
 
-  sessions[code] = {
-    code,
+  const session = {
+    adminCode,
+    viewCode,
     adminToken,
     adminPassword,
     config,
@@ -72,17 +78,24 @@ app.post('/api/session/create', (req, res) => {
     tickId: null
   };
 
-  // Auto-cleanup après 12h
-  setTimeout(() => { delete sessions[code]; }, 12 * 60 * 60 * 1000);
+  // Indexer par les deux codes
+  sessions[adminCode] = session;
+  sessions[viewCode]  = session;
 
-  res.json({ code, adminToken });
+  setTimeout(() => {
+    delete sessions[adminCode];
+    delete sessions[viewCode];
+  }, 12 * 60 * 60 * 1000);
+
+  res.json({ adminCode, viewCode, adminToken });
 });
 
 app.post('/api/session/join', (req, res) => {
   const { code } = req.body;
   const session = sessions[code?.toUpperCase()];
   if (!session) return res.status(404).json({ error: 'Session introuvable' });
-  res.json({ code: session.code, config: session.config });
+  const isAdmin = code.toUpperCase() === session.adminCode;
+  res.json({ adminCode: session.adminCode, viewCode: session.viewCode, config: session.config, isAdmin });
 });
 
 app.post('/api/session/admin', (req, res) => {
@@ -110,7 +123,8 @@ wss.on('connection', (ws) => {
       if (!session) { ws.send(JSON.stringify({ type: 'error', msg: 'Session introuvable' })); return; }
       currentSession = session;
       session.clients.add(ws);
-      isAdmin = (msg.adminToken && msg.adminToken === session.adminToken);
+      // Admin si le code fourni est le code admin
+      isAdmin = (msg.code?.toUpperCase() === session.adminCode);
       ws.send(JSON.stringify({ ...getPublicState(session), isAdmin }));
       return;
     }
