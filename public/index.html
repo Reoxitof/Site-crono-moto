@@ -44,6 +44,11 @@ h2{font-size:0.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:1
 .p-row input[type="text"]{flex:1;background:#0d0d0d;border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px 12px;font-size:1rem;min-width:0;}
 .p-row input[type="text"]:focus{outline:none;border-color:var(--orange);}
 .p-row input[type="color"]{width:42px;height:42px;border:2px solid var(--border);border-radius:8px;cursor:pointer;background:none;padding:2px;flex-shrink:0;}
+.p-row .btn-remove{width:34px;height:34px;border:none;border-radius:8px;background:#2a0a0a;color:var(--red);font-size:1.2rem;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;line-height:1;}
+.p-row .btn-remove:active{background:#450a0a;}
+#btn-add-participant{width:100%;padding:12px;border:1px dashed var(--border);border-radius:10px;background:transparent;color:var(--muted);font-size:.9rem;font-weight:700;cursor:pointer;margin-top:10px;transition:all .15s;}
+#btn-add-participant:hover{border-color:var(--orange);color:var(--orange);}
+#btn-add-participant:active{background:#1a0d00;}
 
 .options-row{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;}
 .opt-group{display:flex;flex-direction:column;gap:4px;}
@@ -172,6 +177,7 @@ h2{font-size:0.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:1
   <div class="card">
     <h2>Participants</h2>
     <div id="p-list"></div>
+    <button id="btn-add-participant">＋ Ajouter un participant</button>
   </div>
 
   <div class="card">
@@ -268,22 +274,120 @@ function showRace() {
 }
 
 // ══════════════════════════════════════
-// SETUP PARTICIPANTS LIST
+// SETUP PARTICIPANTS LIST (dynamique)
 // ══════════════════════════════════════
-(function buildParticipantList() {
+let participantCount = 10; // nombre initial
+
+function renderParticipantList() {
   const list = document.getElementById('p-list');
-  for (let i = 0; i < 10; i++) {
+  // Sauvegarder les valeurs existantes avant re-render
+  const saved = [];
+  list.querySelectorAll('.p-row').forEach((row, i) => {
+    saved.push({
+      name: row.querySelector('input[type="text"]')?.value || '',
+      color: row.querySelector('input[type="color"]')?.value || COLORS[i % COLORS.length]
+    });
+  });
+  list.innerHTML = '';
+  for (let i = 0; i < participantCount; i++) {
+    const name  = saved[i]?.name  ?? `Pilote ${i+1}`;
+    const color = saved[i]?.color ?? COLORS[i % COLORS.length];
     const row = document.createElement('div');
     row.className = 'p-row';
-    row.innerHTML = `<span class="p-num">${i+1}</span>
-      <input type="text" id="pn${i}" value="Pilote ${i+1}">
-      <input type="color" id="pc${i}" value="${COLORS[i]}">`;
+    row.dataset.idx = i;
+    row.innerHTML = `
+      <span class="p-num">${i+1}</span>
+      <input type="text" id="pn${i}" value="${name}" placeholder="Pilote ${i+1}">
+      <input type="color" id="pc${i}" value="${color}">
+      <button class="btn-remove" data-idx="${i}" title="Retirer">✕</button>`;
     list.appendChild(row);
   }
-  document.getElementById('mode-sel').addEventListener('change', e => {
-    document.getElementById('interval-group').style.display = e.target.value === 'auto' ? '' : 'none';
+  // Boutons supprimer
+  list.querySelectorAll('.btn-remove').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.idx);
+      removeParticipant(idx);
+    });
   });
-})();
+  // Désactiver suppression si 1 seul participant
+  if (participantCount <= 1) {
+    list.querySelectorAll('.btn-remove').forEach(b => b.disabled = true);
+  }
+}
+
+function removeParticipant(idx) {
+  if (participantCount <= 1) return;
+  // Récupérer toutes les valeurs actuelles
+  const vals = getCurrentParticipantValues();
+  vals.splice(idx, 1);
+  participantCount--;
+  // Re-render avec les nouvelles valeurs
+  const list = document.getElementById('p-list');
+  list.innerHTML = '';
+  // Temporairement vider pour forcer re-render avec bonnes valeurs
+  const saved = vals;
+  for (let i = 0; i < participantCount; i++) {
+    const row = document.createElement('div');
+    row.className = 'p-row';
+    row.dataset.idx = i;
+    row.innerHTML = `
+      <span class="p-num">${i+1}</span>
+      <input type="text" id="pn${i}" value="${saved[i]?.name || `Pilote ${i+1}`}" placeholder="Pilote ${i+1}">
+      <input type="color" id="pc${i}" value="${saved[i]?.color || COLORS[i % COLORS.length]}">
+      <button class="btn-remove" data-idx="${i}" title="Retirer">✕</button>`;
+    list.appendChild(row);
+  }
+  list.querySelectorAll('.btn-remove').forEach(btn => {
+    btn.addEventListener('click', () => removeParticipant(parseInt(btn.dataset.idx)));
+  });
+  if (participantCount <= 1) list.querySelectorAll('.btn-remove').forEach(b => b.disabled = true);
+}
+
+function getCurrentParticipantValues() {
+  const vals = [];
+  for (let i = 0; i < participantCount; i++) {
+    vals.push({
+      name:  document.getElementById(`pn${i}`)?.value || `Pilote ${i+1}`,
+      color: document.getElementById(`pc${i}`)?.value || COLORS[i % COLORS.length]
+    });
+  }
+  return vals;
+}
+
+document.getElementById('btn-add-participant').addEventListener('click', () => {
+  if (participantCount >= 20) return; // max 20
+  // Sauvegarder valeurs actuelles
+  const vals = getCurrentParticipantValues();
+  participantCount++;
+  const i = participantCount - 1;
+  vals.push({ name: `Pilote ${i+1}`, color: COLORS[i % COLORS.length] });
+  // Re-render
+  const list = document.getElementById('p-list');
+  list.innerHTML = '';
+  for (let j = 0; j < participantCount; j++) {
+    const row = document.createElement('div');
+    row.className = 'p-row';
+    row.dataset.idx = j;
+    row.innerHTML = `
+      <span class="p-num">${j+1}</span>
+      <input type="text" id="pn${j}" value="${vals[j]?.name || `Pilote ${j+1}`}" placeholder="Pilote ${j+1}">
+      <input type="color" id="pc${j}" value="${vals[j]?.color || COLORS[j % COLORS.length]}">
+      <button class="btn-remove" data-idx="${j}" title="Retirer">✕</button>`;
+    list.appendChild(row);
+  }
+  list.querySelectorAll('.btn-remove').forEach(btn => {
+    btn.addEventListener('click', () => removeParticipant(parseInt(btn.dataset.idx)));
+  });
+  // Scroll vers le nouveau
+  list.lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+});
+
+// Init
+renderParticipantList();
+
+document.getElementById('mode-sel').addEventListener('change', e => {
+  document.getElementById('interval-group').style.display = e.target.value === 'auto' ? '' : 'none';
+});
 
 // ══════════════════════════════════════
 // HOME SCREEN
@@ -353,9 +457,9 @@ document.getElementById('btn-config-back').addEventListener('click', () => showS
 
 document.getElementById('btn-launch').addEventListener('click', async () => {
   const pwd = document.getElementById('create-pwd').value.trim();
-  const participants = Array.from({length:10}, (_,i) => ({
-    name: document.getElementById(`pn${i}`).value.trim() || `Pilote ${i+1}`,
-    color: document.getElementById(`pc${i}`).value
+  const participants = Array.from({length: participantCount}, (_,i) => ({
+    name: document.getElementById(`pn${i}`)?.value.trim() || `Pilote ${i+1}`,
+    color: document.getElementById(`pc${i}`)?.value || COLORS[i % COLORS.length]
   }));
   const config = {
     participants,
