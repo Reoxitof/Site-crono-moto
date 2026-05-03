@@ -214,6 +214,20 @@ h2{font-size:0.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:1
     </div>
   </div>
 
+  <div class="card">
+    <h2>Pénalités</h2>
+    <div class="options-row">
+      <div class="opt-group">
+        <label>🟨 Pénalité / faute (sec)</label>
+        <input type="number" id="penalty-fault" value="5" min="0" max="999" style="width:80px">
+      </div>
+      <div class="opt-group">
+        <label>💥 Pénalité DNF (sec)</label>
+        <input type="number" id="penalty-dnf" value="30" min="0" max="9999" style="width:80px">
+      </div>
+    </div>
+  </div>
+
   <button class="btn btn-orange" id="btn-launch">🚦 Créer la session</button>
   <button class="btn btn-dark" id="btn-config-back">← Retour</button>
 </div>
@@ -247,7 +261,15 @@ h2{font-size:0.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:1
   <div id="viewer-badge-wrap"></div>
   <div id="cards"></div>
   <div id="classement">
-    <h2>🏆 Classement</h2>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px 0;">
+      <h2 style="padding:0;">🏆 Classement</h2>
+      <select id="rank-mode" style="background:#111;border:1px solid var(--border);border-radius:8px;color:var(--text);padding:6px 10px;font-size:.78rem;">
+        <option value="best">Meilleur temps</option>
+        <option value="cumul">Cumul des temps</option>
+        <option value="penalite">Cumul + pénalités</option>
+      </select>
+    </div>
+    <div id="rank-pen-info" style="display:none;font-size:.75rem;color:var(--muted);padding:4px 16px 8px;"></div>
     <div id="rank-list"></div>
   </div>
   <button id="btn-reset">🔄 Quitter la session</button>
@@ -470,6 +492,8 @@ document.getElementById('btn-launch').addEventListener('click', async () => {
     mode: document.getElementById('mode-sel').value,
     interval: parseInt(document.getElementById('interval-in').value) || 20,
     sprints: parseInt(document.getElementById('sprints-in').value) || 3,
+    penaltyFault: parseInt(document.getElementById('penalty-fault').value) || 0,
+    penaltyDnf:   parseInt(document.getElementById('penalty-dnf').value)   || 0,
     currentSprint: 0
   };
   try {
@@ -807,6 +831,8 @@ document.getElementById('btn-force').addEventListener('click', () => {
   sendWS({ type: 'auto_force' });
 });
 
+document.getElementById('rank-mode').addEventListener('change', () => renderRank());
+
 // ══════════════════════════════════════
 // RAF — live chrono
 // ══════════════════════════════════════
@@ -837,41 +863,127 @@ function startRAF() {
 // ══════════════════════════════════════
 // CLASSEMENT
 // ══════════════════════════════════════
+function calcScore(row, mode) {
+  const cfg = appState.config;
+  const pFault = (cfg.penaltyFault || 0) * 1000; // en ms
+  const pDnf   = (cfg.penaltyDnf   || 0) * 1000;
+
+  const times = row.times; // par sprint
+
+  if (mode === 'best') {
+    // Meilleur temps brut (sans pénalités)
+    const valid = times.filter(e => e.state==='done').map(e => e.elapsed);
+    return valid.length ? Math.min(...valid) : null;
+  }
+
+  if (mode === 'cumul') {
+    // Somme des temps bruts (DNF = non compté)
+    const valid = times.filter(e => e.state==='done').map(e => e.elapsed);
+    return valid.length ? valid.reduce((a,b) => a+b, 0) : null;
+  }
+
+  if (mode === 'penalite') {
+    // Somme des temps + pénalités fautes + pénalités DNF
+    let total = 0;
+    let hasAny = false;
+    times.forEach(e => {
+      if (e.state === 'done') {
+        total += e.elapsed + (e.faults||0) * pFault;
+        hasAny = true;
+      } else if (e.state === 'dnf') {
+        total += (e.elapsed || 0) + pDnf + (e.faults||0) * pFault;
+        hasAny = true;
+      }
+    });
+    // Ajouter pénalités fautes sur sprints pending/running aussi
+    times.forEach(e => {
+      if (e.state !== 'done' && e.state !== 'dnf') {
+        total += (e.faults||0) * pFault;
+      }
+    });
+    return hasAny ? total : null;
+  }
+  return null;
+}
+
 function renderRank() {
   const el = document.getElementById('rank-list');
+  if (!el || !appState.data) return;
   el.innerHTML = '';
-  const rows = appState.config.participants.map((p, i) => {
+
+  const modeEl = document.getElementById('rank-mode');
+  const mode = modeEl ? modeEl.value : 'best';
+  const cfg = appState.config;
+  const pFault = (cfg.penaltyFault || 0) * 1000;
+  const pDnf   = (cfg.penaltyDnf   || 0) * 1000;
+
+  const rows = cfg.participants.map((p, i) => {
     const times = appState.data.map(s => s[i]);
-    const valid = times.filter(e => e.state==='done').map(e => e.elapsed);
     const totalFaults = appState.data.reduce((sum, s) => sum + (s[i].faults||0), 0);
-    return { p, i, times, best: valid.length ? Math.min(...valid) : null, totalFaults };
+    const totalDnf    = appState.data.filter(s => s[i].state==='dnf').length;
+    const score = calcScore({ times }, mode);
+    return { p, i, times, score, totalFaults, totalDnf };
   });
+
   rows.sort((a,b) => {
-    if (a.best!==null && b.best!==null) return a.best - b.best;
-    if (a.best!==null) return -1;
-    if (b.best!==null) return 1;
+    if (a.score!==null && b.score!==null) return a.score - b.score;
+    if (a.score!==null) return -1;
+    if (b.score!==null) return 1;
     return 0;
   });
+
   const medals = ['🥇','🥈','🥉'];
   rows.forEach((row, rank) => {
     const div = document.createElement('div');
     div.className = 'rank-row';
+
     let timesHtml = '';
-    for (let s = 0; s < appState.config.sprints; s++) {
+    for (let s = 0; s < cfg.sprints; s++) {
       const e = row.times[s];
-      const isBest = e.state==='done' && row.best===e.elapsed;
-      if (e.state==='done')     timesHtml += `<span class="rank-t${isBest?' best':''}" title="Sprint ${s+1}">S${s+1} ${fmt(e.elapsed)}</span>`;
-      else if (e.state==='dnf') timesHtml += `<span class="rank-t dnf-t">S${s+1} DNF</span>`;
+      let pen = 0;
+      if (mode === 'penalite') {
+        pen += (e.faults||0) * pFault;
+        if (e.state === 'dnf') pen += pDnf;
+      }
+      const penStr = pen > 0 ? ` <span style="color:var(--red);font-size:.65rem;">+${fmt(pen)}</span>` : '';
+
+      if (e.state==='done')     timesHtml += `<span class="rank-t" title="Sprint ${s+1}">S${s+1} ${fmt(e.elapsed)}${penStr}</span>`;
+      else if (e.state==='dnf') timesHtml += `<span class="rank-t dnf-t">S${s+1} DNF${penStr}</span>`;
+      else if (e.state==='running') timesHtml += `<span class="rank-t">S${s+1} 🏍️</span>`;
       else                      timesHtml += `<span class="rank-t">S${s+1} --</span>`;
     }
+
+    // Score affiché
+    let scoreHtml = '';
+    if (row.score !== null) {
+      const label = mode==='best' ? 'Meilleur' : mode==='cumul' ? 'Cumul' : 'Total';
+      scoreHtml = `<span class="rank-t best" title="${label}">${fmt(row.score)}</span>`;
+    }
+
+    // Badges pénalités
+    let badgesHtml = '';
+    if (row.totalFaults > 0) badgesHtml += `<span class="fault-badge" title="${row.totalFaults} faute(s)">${row.totalFaults}</span>`;
+    if (row.totalDnf > 0)    badgesHtml += `<span class="fault-badge" style="background:var(--red);color:#fff;margin-left:3px;" title="${row.totalDnf} DNF">DNF</span>`;
+
     div.innerHTML = `
       <span class="rank-pos">${medals[rank]||rank+1}</span>
       <div class="rank-dot" style="background:${row.p.color}"></div>
       <span class="rank-name">${row.p.name}</span>
-      <div class="rank-times">${timesHtml}</div>
-      ${row.totalFaults>0?`<span class="fault-badge" title="Fautes">${row.totalFaults}</span>`:''}`;
+      <div class="rank-times">${timesHtml}${scoreHtml}</div>
+      ${badgesHtml}`;
     el.appendChild(div);
   });
+
+  // Afficher les pénalités configurées
+  const penInfoEl = document.getElementById('rank-pen-info');
+  if (penInfoEl) {
+    if (mode === 'penalite') {
+      penInfoEl.textContent = `🟨 +${cfg.penaltyFault||0}s/faute  💥 +${cfg.penaltyDnf||0}s/DNF`;
+      penInfoEl.style.display = 'block';
+    } else {
+      penInfoEl.style.display = 'none';
+    }
+  }
 }
 
 // ══════════════════════════════════════
