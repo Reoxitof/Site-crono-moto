@@ -133,6 +133,16 @@ h2{font-size:0.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:1
 <div id="home-screen" class="screen active">
   <h1>🏍️ Chrono MX</h1>
 
+  <!-- Banner reprise session (caché par défaut) -->
+  <div id="resume-banner" style="display:none;background:#1a2a1a;border:1px solid var(--green);border-radius:14px;padding:14px 16px;margin-bottom:14px;">
+    <div style="font-size:.75rem;color:var(--green);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">🔄 Session précédente détectée</div>
+    <div id="resume-info" style="font-size:.9rem;color:var(--text);margin-bottom:10px;"></div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-green" id="btn-resume" style="margin:0;flex:1;padding:10px;">↩️ Reprendre</button>
+      <button class="btn btn-dark"  id="btn-resume-dismiss" style="margin:0;flex:1;padding:10px;">✕ Ignorer</button>
+    </div>
+  </div>
+
   <div class="card">
     <h2>Créer une session</h2>
     <button class="btn btn-orange" id="btn-go-create">⚙️ Configurer la session</button>
@@ -486,6 +496,7 @@ function connectWS() {
       appState.autoState = msg.autoState;
       if (msg.adminCode) appState.adminCode = msg.adminCode;
       if (msg.viewCode)  appState.viewCode  = msg.viewCode;
+      saveSession(); // persistance auto
       if (appState.screen !== 'race') {
         document.getElementById('race-admin-badge').textContent = appState.adminCode  || '--';
         document.getElementById('race-view-badge').textContent  = appState.viewCode   || '--';
@@ -768,15 +779,67 @@ function renderRank() {
 }
 
 // ══════════════════════════════════════
+// PERSISTANCE SESSION (localStorage)
+// ══════════════════════════════════════
+const STORAGE_KEY = 'mx_session';
+
+function saveSession() {
+  if (!appState.sessionCode) return;
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      sessionCode: appState.sessionCode,
+      adminCode:   appState.adminCode,
+      viewCode:    appState.viewCode,
+      isAdmin:     appState.isAdmin,
+      savedAt:     Date.now()
+    }));
+  } catch(e) {}
+}
+
+function clearSavedSession() {
+  try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
+}
+
+function checkSavedSession() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const saved = JSON.parse(raw);
+    // Ignorer si plus de 12h
+    if (Date.now() - saved.savedAt > 12 * 60 * 60 * 1000) { clearSavedSession(); return; }
+    const banner = document.getElementById('resume-banner');
+    const info   = document.getElementById('resume-info');
+    const role   = saved.isAdmin ? '🔑 Admin' : '👁️ Spectateur';
+    const code   = saved.sessionCode;
+    info.textContent = `${role} — Code : ${code}`;
+    banner.style.display = 'block';
+
+    document.getElementById('btn-resume').onclick = () => {
+      banner.style.display = 'none';
+      appState.sessionCode = saved.sessionCode;
+      appState.adminCode   = saved.adminCode;
+      appState.viewCode    = saved.viewCode;
+      appState.isAdmin     = saved.isAdmin;
+      connectWS();
+    };
+    document.getElementById('btn-resume-dismiss').onclick = () => {
+      banner.style.display = 'none';
+      clearSavedSession();
+    };
+  } catch(e) {}
+}
+
+// ══════════════════════════════════════
 // RESET / QUIT
 // ══════════════════════════════════════
 document.getElementById('btn-reset').addEventListener('click', () => {
   cancelAnimationFrame(appState.rafId);
   if (appState.ws) { appState.ws.onclose = null; appState.ws.close(); appState.ws = null; }
-  appState = { ...appState, sessionCode:null, adminToken:null, isAdmin:false, config:null, data:null, autoState:null, curSprint:0, ws:null, rafId:null };
+  clearSavedSession();
+  appState = { ...appState, sessionCode:null, adminToken:null, adminCode:null, viewCode:null, isAdmin:false, config:null, data:null, autoState:null, curSprint:0, ws:null, rafId:null };
   document.getElementById('join-code').value = '';
-  document.getElementById('create-pwd').value = '';
   document.getElementById('join-error').textContent = '';
+  document.getElementById('resume-banner').style.display = 'none';
   showScreen('home');
 });
 
@@ -801,6 +864,9 @@ function toast(msg) {
   clearTimeout(toastTimer);
   toastTimer=setTimeout(()=>el.classList.remove('show'),2500);
 }
+
+// Vérifier session sauvegardée au démarrage
+checkSavedSession();
 </script>
 </body>
 </html>

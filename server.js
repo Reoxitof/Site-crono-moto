@@ -55,10 +55,11 @@ app.post('/api/session/create', (req, res) => {
   const { config, adminPassword } = req.body;
   if (!config || !adminPassword) return res.status(400).json({ error: 'Manque config ou mot de passe' });
 
-  // Deux codes distincts
   let adminCode, viewCode;
   do { adminCode = genCode(); } while (sessions[adminCode]);
   do { viewCode  = genCode(); } while (sessions[viewCode] || viewCode === adminCode);
+
+  console.log(`[CREATE] adminCode=${adminCode} viewCode=${viewCode} participants=${config.participants?.length} sprints=${config.sprints}`);
 
   const adminToken = uuidv4();
 
@@ -120,11 +121,15 @@ wss.on('connection', (ws) => {
     // ── JOIN ──
     if (msg.type === 'join') {
       const session = sessions[msg.code?.toUpperCase()];
-      if (!session) { ws.send(JSON.stringify({ type: 'error', msg: 'Session introuvable' })); return; }
+      if (!session) {
+        console.log(`[JOIN FAIL] code=${msg.code} — session introuvable`);
+        ws.send(JSON.stringify({ type: 'error', msg: 'Session introuvable' }));
+        return;
+      }
       currentSession = session;
       session.clients.add(ws);
-      // Admin si le code fourni est le code admin
       isAdmin = (msg.code?.toUpperCase() === session.adminCode);
+      console.log(`[JOIN] code=${msg.code} isAdmin=${isAdmin} clients=${session.clients.size}`);
       ws.send(JSON.stringify({ ...getPublicState(session), isAdmin }));
       return;
     }
@@ -143,7 +148,8 @@ wss.on('connection', (ws) => {
     if (msg.type === 'action') {
       const { sprintIdx, piloteIdx, action } = msg;
       const e = s.data[sprintIdx]?.[piloteIdx];
-      if (!e) return;
+      if (!e) { console.log(`[ACTION FAIL] invalid sprintIdx=${sprintIdx} piloteIdx=${piloteIdx}`); return; }
+      console.log(`[ACTION] sprint=${sprintIdx} pilote=${piloteIdx} action=${action} state=${e.state}`);
 
       if (action === 'd' && e.state === 'pending') {
         e.state = 'running';
@@ -179,7 +185,10 @@ wss.on('connection', (ws) => {
   });
 
   ws.on('close', () => {
-    if (currentSession) currentSession.clients.delete(ws);
+    if (currentSession) {
+      currentSession.clients.delete(ws);
+      console.log(`[DISCONNECT] isAdmin=${isAdmin} clients restants=${currentSession.clients.size}`);
+    }
   });
 });
 
