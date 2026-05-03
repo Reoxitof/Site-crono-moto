@@ -243,7 +243,7 @@ h2{font-size:0.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:1
 const COLORS=['#e74c3c','#e67e22','#f1c40f','#2ecc71','#1abc9c','#3498db','#9b59b6','#e91e63','#00bcd4','#8bc34a'];
 
 let appState = {
-  screen: 'home',       // home | admin-join | config | code | race
+  screen: 'home',
   sessionCode: null,
   adminToken: null,
   isAdmin: false,
@@ -254,7 +254,7 @@ let appState = {
   curSprint: 0,
   ws: null,
   rafId: null,
-  // local timestamps: data from server has start as epoch ms
+  clockOffset: 0   // Date.now()client - Date.now()serveur
 };
 
 // ══════════════════════════════════════
@@ -512,6 +512,9 @@ function connectWS() {
     const msg = JSON.parse(ev.data);
     if (msg.type === 'error') { toast('❌ ' + msg.msg); return; }
     if (msg.type === 'state') {
+      // Sync horloge : offset = clientNow - serverNow
+      if (msg.serverTime) appState.clockOffset = Date.now() - msg.serverTime;
+
       appState.isAdmin = msg.isAdmin !== undefined ? msg.isAdmin : appState.isAdmin;
       appState.config = msg.config;
       appState.data = msg.data;
@@ -526,7 +529,6 @@ function connectWS() {
         startRAF();
         showRace();
       } else {
-        // Mise à jour partielle
         syncCards();
         renderRank();
         updateAutoBar();
@@ -699,10 +701,13 @@ function updateAutoBar() {
   const el = document.getElementById('auto-count');
   const lbl = document.getElementById('auto-label');
   if (!started) {
-    el.textContent = '⏳'; el.style.color = '#666';
+    // Pas encore démarré — ne jamais afficher le compte à rebours
+    el.textContent = '⏳';
+    el.style.color = '#666';
     if (lbl) lbl.textContent = 'En attente du 1er départ :';
   } else if (paused) {
-    el.textContent = '⏸'; el.style.color = '#666';
+    el.textContent = '⏸';
+    el.style.color = '#666';
     if (lbl) lbl.textContent = 'Prochain départ :';
   } else {
     el.textContent = sec + 's';
@@ -729,14 +734,14 @@ function startRAF() {
   cancelAnimationFrame(appState.rafId);
   function loop() {
     if (!appState.data) { appState.rafId = requestAnimationFrame(loop); return; }
-    const now = Date.now();
+    // Temps "serveur" estimé = Date.now() - clockOffset
+    const serverNow = Date.now() - appState.clockOffset;
     appState.data[appState.curSprint].forEach((e, i) => {
       const el = document.getElementById(`ct-${i}`);
       if (!el) return;
       if (e.state === 'running') {
-        el.textContent = fmt(now - e.start);
+        el.textContent = fmt(serverNow - e.start);
       } else if (e.state === 'done') {
-        // Figer le temps définitivement
         el.className = 'card-time done';
         el.textContent = fmt(e.elapsed);
       } else if (e.state === 'dnf') {
@@ -811,7 +816,7 @@ function fmt(ms) {
   return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}.${String(cs).padStart(2,'0')}`;
 }
 function getTimeStr(e) {
-  if (e.state==='running') return fmt(Date.now()-e.start);
+  if (e.state==='running') return fmt((Date.now() - appState.clockOffset) - e.start);
   if (e.state==='done')    return fmt(e.elapsed);
   if (e.state==='dnf')     return 'DNF';
   return '--:--.--';

@@ -41,7 +41,8 @@ function getPublicState(session) {
     type: 'state',
     config: session.config,
     data: session.data,
-    autoState: session.autoState
+    autoState: session.autoState,
+    serverTime: Date.now()   // pour sync horloge client
   };
 }
 
