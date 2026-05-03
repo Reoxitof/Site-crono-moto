@@ -731,9 +731,18 @@ function startRAF() {
     if (!appState.data) { appState.rafId = requestAnimationFrame(loop); return; }
     const now = Date.now();
     appState.data[appState.curSprint].forEach((e, i) => {
-      if (e.state !== 'running') return;
       const el = document.getElementById(`ct-${i}`);
-      if (el) el.textContent = fmt(now - e.start);
+      if (!el) return;
+      if (e.state === 'running') {
+        el.textContent = fmt(now - e.start);
+      } else if (e.state === 'done') {
+        // Figer le temps définitivement
+        el.className = 'card-time done';
+        el.textContent = fmt(e.elapsed);
+      } else if (e.state === 'dnf') {
+        el.className = 'card-time dnf-t';
+        el.textContent = 'DNF';
+      }
     });
     appState.rafId = requestAnimationFrame(loop);
   }
