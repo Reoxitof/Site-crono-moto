@@ -950,17 +950,28 @@ function renderRank() {
     let timesHtml = '';
     for (let s = 0; s < cfg.sprints; s++) {
       const e = row.times[s];
+      // Pénalités de CE sprint uniquement
+      const faultsThisSprint = e.faults || 0;
+      const isDnfThisSprint  = e.state === 'dnf';
       let pen = 0;
       if (mode === 'penalite' || mode === 'best-pen') {
-        pen += (e.faults||0) * pFault;
-        if (e.state === 'dnf') pen += pDnf;
+        pen += faultsThisSprint * pFault;
+        if (isDnfThisSprint) pen += pDnf;
       }
-      const penStr = pen > 0 ? ` <span style="color:var(--red);font-size:.65rem;">+${fmt(pen)}</span>` : '';
+      const penStr = pen > 0 ? `<span style="color:var(--red);font-size:.6rem;"> +${fmt(pen)}</span>` : '';
+      // Badge fautes de ce sprint
+      const faultBadge = faultsThisSprint > 0
+        ? `<span style="background:var(--yellow);color:#000;border-radius:50%;width:14px;height:14px;font-size:.6rem;font-weight:900;display:inline-flex;align-items:center;justify-content:center;margin-left:2px;">${faultsThisSprint}</span>`
+        : '';
 
-      if (e.state==='done')     timesHtml += `<span class="rank-t" title="Sprint ${s+1}">S${s+1} ${fmt(e.elapsed)}${penStr}</span>`;
-      else if (e.state==='dnf') timesHtml += `<span class="rank-t dnf-t">S${s+1} DNF${penStr}</span>`;
-      else if (e.state==='running') timesHtml += `<span class="rank-t">S${s+1} 🏍️</span>`;
-      else                      timesHtml += `<span class="rank-t">S${s+1} --</span>`;
+      if (e.state==='done')
+        timesHtml += `<span class="rank-t" title="Sprint ${s+1}">S${s+1} ${fmt(e.elapsed)}${faultBadge}${penStr}</span>`;
+      else if (e.state==='dnf')
+        timesHtml += `<span class="rank-t dnf-t" title="Sprint ${s+1}">S${s+1} DNF${faultBadge}${penStr}</span>`;
+      else if (e.state==='running')
+        timesHtml += `<span class="rank-t">S${s+1} 🏍️${faultBadge}</span>`;
+      else
+        timesHtml += `<span class="rank-t">S${s+1} --${faultBadge}</span>`;
     }
 
     // Score affiché
@@ -970,17 +981,11 @@ function renderRank() {
       scoreHtml = `<span class="rank-t best" title="${label}">${fmt(row.score)}</span>`;
     }
 
-    // Badges pénalités
-    let badgesHtml = '';
-    if (row.totalFaults > 0) badgesHtml += `<span class="fault-badge" title="${row.totalFaults} faute(s)">${row.totalFaults}</span>`;
-    if (row.totalDnf > 0)    badgesHtml += `<span class="fault-badge" style="background:var(--red);color:#fff;margin-left:3px;" title="${row.totalDnf} DNF">DNF</span>`;
-
     div.innerHTML = `
       <span class="rank-pos">${medals[rank]||rank+1}</span>
       <div class="rank-dot" style="background:${row.p.color}"></div>
       <span class="rank-name">${row.p.name}</span>
-      <div class="rank-times">${timesHtml}${scoreHtml}</div>
-      ${badgesHtml}`;
+      <div class="rank-times">${timesHtml}${scoreHtml}</div>`;
     el.appendChild(div);
   });
 
