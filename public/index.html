@@ -131,6 +131,18 @@ h2{font-size:0.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:1
 
 .error-msg{color:var(--red);font-size:.85rem;margin-top:6px;min-height:20px;}
 .viewer-badge{background:#1a1a1a;border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:.8rem;color:var(--muted);text-align:center;margin:8px 10px 0;}
+
+/* ── CONFIRM MODAL ── */
+#confirm-modal{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;display:none;align-items:flex-end;justify-content:center;}
+#confirm-modal.show{display:flex;}
+#confirm-box{background:var(--card);border:1px solid var(--border);border-radius:20px 20px 0 0;padding:24px 20px 36px;width:100%;max-width:520px;text-align:center;}
+.confirm-icon{font-size:2.8rem;margin-bottom:8px;}
+.confirm-msg{font-size:1.05rem;font-weight:800;color:var(--text);margin-bottom:4px;}
+.confirm-sub{font-size:.85rem;color:var(--muted);margin-bottom:22px;}
+.confirm-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.confirm-btns button{padding:15px;border:none;border-radius:12px;font-size:.95rem;font-weight:800;cursor:pointer;text-transform:uppercase;letter-spacing:1px;touch-action:manipulation;}
+#btn-confirm-yes{background:var(--orange);color:#fff;}
+#btn-confirm-no{background:#222;color:var(--muted);border:1px solid var(--border);}
 </style>
 </head>
 <body>
@@ -242,6 +254,19 @@ h2{font-size:0.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:1
 </div>
 
 <div id="toast"></div>
+
+<!-- ── CONFIRM MODAL ── -->
+<div id="confirm-modal">
+  <div id="confirm-box">
+    <div class="confirm-icon" id="confirm-icon">❓</div>
+    <div class="confirm-msg"  id="confirm-msg">Confirmer ?</div>
+    <div class="confirm-sub"  id="confirm-sub"></div>
+    <div class="confirm-btns">
+      <button id="btn-confirm-yes">✅ Confirmer</button>
+      <button id="btn-confirm-no">✕ Annuler</button>
+    </div>
+  </div>
+</div>
 
 <script>
 // ══════════════════════════════════════
@@ -659,6 +684,47 @@ function syncCards() {
 }
 
 // ══════════════════════════════════════
+// CONFIRM MODAL
+// ══════════════════════════════════════
+let confirmCallback = null;
+
+const CONFIRM_CONFIG = {
+  'd':       { icon:'🚦', msg:'Départ', color:'#3b82f6',  needConfirm: true  },
+  'a':       { icon:'🏁', msg:'Arrivée',color:'#22c55e',  needConfirm: false },
+  't':       { icon:'💥', msg:'DNF — Tombé', color:'#ef4444', needConfirm: true },
+  'f':       { icon:'🟨', msg:'Carton jaune', color:'#f5c518', needConfirm: true },
+  'undnf':   { icon:'🔄', msg:'Annuler DNF', color:'#a78bfa', needConfirm: true },
+  'unfault': { icon:'↩️', msg:'Retirer une faute', color:'#94a3b8', needConfirm: true },
+};
+
+function showConfirm(icon, msg, sub, color, onYes) {
+  document.getElementById('confirm-icon').textContent = icon;
+  document.getElementById('confirm-msg').textContent  = msg;
+  document.getElementById('confirm-sub').textContent  = sub;
+  const yes = document.getElementById('btn-confirm-yes');
+  yes.style.background = color;
+  yes.style.color = (color === '#f5c518' || color === '#22c55e') ? '#000' : '#fff';
+  confirmCallback = onYes;
+  document.getElementById('confirm-modal').classList.add('show');
+}
+
+document.getElementById('btn-confirm-yes').addEventListener('click', () => {
+  document.getElementById('confirm-modal').classList.remove('show');
+  if (confirmCallback) { confirmCallback(); confirmCallback = null; }
+});
+document.getElementById('btn-confirm-no').addEventListener('click', () => {
+  document.getElementById('confirm-modal').classList.remove('show');
+  confirmCallback = null;
+});
+// Fermer en cliquant le fond
+document.getElementById('confirm-modal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('confirm-modal')) {
+    document.getElementById('confirm-modal').classList.remove('show');
+    confirmCallback = null;
+  }
+});
+
+// ══════════════════════════════════════
 // BUTTON EVENTS
 // ══════════════════════════════════════
 function attachBtn(id, i, type) {
@@ -685,7 +751,17 @@ function actLocal(i, type) {
     else if (e.state === 'running') action = 'a';
     else return;
   }
-  sendWS({ type: 'action', sprintIdx: appState.curSprint, piloteIdx: i, action });
+
+  const name = appState.config.participants[i].name;
+  const cfg  = CONFIRM_CONFIG[action] || { needConfirm: false };
+
+  const doAction = () => sendWS({ type: 'action', sprintIdx: appState.curSprint, piloteIdx: i, action });
+
+  if (cfg.needConfirm) {
+    showConfirm(cfg.icon, `${cfg.msg} — ${name}`, `Sprint ${appState.curSprint + 1}`, cfg.color, doAction);
+  } else {
+    doAction();
+  }
 }
 
 // ══════════════════════════════════════
