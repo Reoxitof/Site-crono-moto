@@ -103,6 +103,12 @@ h2{font-size:0.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:1
 .c-btn.arrivee:active:not(:disabled){background:#14532d;}
 .c-btn.tombe:active:not(:disabled){background:#450a0a;}
 .c-btn.faute:active:not(:disabled){background:#3a2e00;}
+.c-btn.undnf:not(:disabled){color:#a78bfa;}
+.c-btn.undnf:active:not(:disabled){background:#2e1a4a;}
+.c-btn.unfault:not(:disabled){color:#94a3b8;}
+.c-btn.unfault:active:not(:disabled){background:#1a1a2a;}
+.card-btns-undo .c-btn{padding:10px 8px;font-size:.72rem;opacity:.7;}
+.card-btns-undo .c-btn:not(:disabled){opacity:1;}
 /* Viewer mode — boutons désactivés visuellement */
 .viewer-mode .c-btn{opacity:.25;cursor:not-allowed;pointer-events:none;}
 
@@ -592,12 +598,22 @@ function renderCards() {
         <button class="c-btn tombe" id="cb-${i}" ${canT&&!isDnf?'':'disabled'}>
           <span class="icon">💥</span>Tombé
         </button>
+      </div>
+      <div class="card-btns card-btns-undo" style="border-top:none;">
+        <button class="c-btn unfault" id="cuf-${i}" ${(e.faults||0)===0?'disabled':''} style="grid-column:span 1;">
+          <span class="icon">↩️</span>-Faute
+        </button>
+        <button class="c-btn undnf" id="cud-${i}" ${!isDnf?'disabled':''} style="grid-column:span 2;">
+          <span class="icon">🔄</span>Annuler DNF
+        </button>
       </div>`;
     el.appendChild(card);
     if (appState.isAdmin) {
       attachBtn(`cd-${i}`, i, 'da');
       attachBtn(`cj-${i}`, i, 'f');
       attachBtn(`cb-${i}`, i, 't');
+      attachBtn(`cuf-${i}`, i, 'unfault');
+      attachBtn(`cud-${i}`, i, 'undnf');
     }
   });
 }
@@ -635,6 +651,10 @@ function syncCards() {
     if (bj) bj.disabled = isDnf;
     const bt = document.getElementById(`cb-${i}`);
     if (bt) bt.disabled = !canT||isDnf;
+    const buf = document.getElementById(`cuf-${i}`);
+    if (buf) buf.disabled = (e.faults||0) === 0;
+    const bud = document.getElementById(`cud-${i}`);
+    if (bud) bud.disabled = !isDnf;
   });
 }
 

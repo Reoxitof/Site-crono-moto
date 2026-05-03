@@ -165,8 +165,15 @@ wss.on('connection', (ws) => {
       } else if (action === 't' && e.state !== 'dnf') {
         if (e.state === 'running') e.elapsed = Date.now() - e.start;
         e.state = 'dnf';
+      } else if (action === 'undnf' && e.state === 'dnf') {
+        // Annuler DNF → repasse en pending (le temps partiel est perdu)
+        e.state = 'pending';
+        e.start = null;
+        e.elapsed = null;
       } else if (action === 'f' && e.state !== 'dnf') {
         e.faults = (e.faults || 0) + 1;
+      } else if (action === 'unfault' && (e.faults || 0) > 0) {
+        e.faults = e.faults - 1;
       } else return;
 
       broadcastAll(s, getPublicState(s));
